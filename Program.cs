@@ -3,17 +3,18 @@ using Discord.Net;
 using Discord.WebSocket;
 using Flurl;
 using Flurl.Http;
-using NCrontab;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace StarBot {
     internal class Program {
-        public bool debugMode = false;
-        private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
-        private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
-        private List<int> nextUp = new List<int>();
+        //public bool debugMode = Config.DEBUG_MODE;
+        //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
+        //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
+        //private List<int> nextUp = new List<int>();
+        private Scheduler scheduler = new Scheduler();
         private Database data = new Database();
+        SocketGuild? guild;
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
             Console.WriteLine(msg.ToString());
@@ -37,9 +38,9 @@ namespace StarBot {
         private HttpClient? web;
 
         public async Task MainAsync(string[] args) {
-            if (debugMode) {
+            /*if (debugMode) {
                 Console.WriteLine("Warning, this program is running in debug mode. It will not perform as expected.");
-            }
+            }*/
 
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
@@ -51,12 +52,14 @@ namespace StarBot {
             await client.LoginAsync(TokenType.Bot, Config.BOT_TOKEN);
             await client.StartAsync();
 
+
             // client initialization completed
 
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
+                guild = client.GetGuild(696808297805774888);
 
-                var guild = client.GetGuild(696808297805774888);
+
                 var dbkeymodify = new SlashCommandBuilder();
                 var dbkeyremove = new SlashCommandBuilder();
                 var starbotInterest = new SlashCommandBuilder();
@@ -124,7 +127,7 @@ namespace StarBot {
             }
 
             //scheduleList.Add(NCrontab.CrontabSchedule.Parse("* * * * *")); // DEBUG
-            scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat")); // XKCD Automation
+            /*scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat")); // XKCD Automation
             scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0 * * *")); // Cat Automation
             scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0/8 * * *")); // Anime Automation
             scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0/8 * * *")); // Anime Memes Automation
@@ -134,12 +137,22 @@ namespace StarBot {
             scheduledLambdas.Add(Lambdas.CatDaily_Automation);
             scheduledLambdas.Add(Lambdas.AnimeDaily_Automation);
             scheduledLambdas.Add(Lambdas.AniMemesDaily_Automation);
-            scheduledLambdas.Add(Lambdas.QuestionOfTheDay_Automation);
+            scheduledLambdas.Add(Lambdas.QuestionOfTheDay_Automation);*/
 
-            CrontabSchedule soonestSchedule = scheduleList[0];
-            int soonestIndex = 0;
+            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
+            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
+            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
+            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AniMemesDaily_Automation, "Animemes Automation");
+            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.QuestionOfTheDay_Automation, "Question of the Day Automation");
 
-            while (true) {
+            await scheduler.addInvokeCommand(guild);
+            await scheduler.schedulerProcess(client, data);
+            await Task.Delay(-1);
+
+            //CrontabSchedule soonestSchedule = scheduleList[0];
+            //int soonestIndex = 0;
+
+            /*while (true) {
                 nextUp.Clear();
                 soonestSchedule = scheduleList[0];
                 for (int i = 1; i < scheduleList.Count(); i++) {
@@ -169,7 +182,7 @@ namespace StarBot {
                 }
                 await data.updateDB();
                 await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
-            }
+            }*/
         }
 
         private async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel) {
@@ -178,6 +191,7 @@ namespace StarBot {
             Console.WriteLine($"{message} -> {after}");
         }
         private async Task SlashCommandHandler(SocketSlashCommand command) {
+            if (client == null) { return; }
             switch (command.CommandName) {
                 case "key-modify":
                     await SlashCommands.keySet(command, client, data);
@@ -187,6 +201,9 @@ namespace StarBot {
                     break;
                 case "starbot-interest":
                     await SlashCommands.starbotInterest(command, client);
+                    break;
+                case "execute-task":
+                    await SlashCommands.executeTask(command, scheduler, client, data);
                     break;
             }
         }
