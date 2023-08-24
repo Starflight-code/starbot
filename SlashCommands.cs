@@ -34,27 +34,37 @@ namespace StarBot {
             }
         }
         public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client) {
-
             var commandArgs = command.Data.Options.ToArray();
-            int interested = (int)commandArgs[0].Value;
+            Int64 interested = (Int64)commandArgs[0].Value;
             if (command.GuildId == null) {
                 await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                 return;
             }
             string uiStatus = "";
             if (interested == 1) {
-                uiStatus = "APPROVED";
-                await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(1143808465194713108);
+                if (!Statics.userHasRole(client, command.GuildId, command.User.Id, 1143808465194713108)) {
+                    uiStatus = "APPROVED";
+                    await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(1143808465194713108);
+                    await command.RespondAsync($"Your interest in StarBot is appreciated. Your access to backend channels was **{uiStatus}**.\nThis action has been logged. Access to these channels may be revoked at any time for any reason.", ephemeral: true);
+                } else {
+                    await command.RespondAsync("You are already enrolled in this program.", ephemeral: true);
+                    return;
+                }
             } else {
-                uiStatus = "REMOVED";
-                await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(1143808465194713108);
+                if (Statics.userHasRole(client, command.GuildId, command.User.Id, 1143808465194713108)) {
+                    uiStatus = "REMOVED";
+                    await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(1143808465194713108);
+                    await command.RespondAsync($"Your access to backend channels was **{uiStatus}**.\nThis action has been logged.", ephemeral: true);
+                } else {
+                    await command.RespondAsync("You are not enrolled in this program.", ephemeral: true);
+                    return;
+                }
             }
-            await command.RespondAsync($"Your interest in StarBot is appreciated. Your access to backend channels was **{uiStatus}**.\nThis action has been logged. Access to these channels may be revoked at any time for any reason.", ephemeral: true);
             await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(1143808465194713108);
             await (client.GetChannel(1143815199816699944) as SocketTextChannel).SendMessageAsync(embed: new EmbedBuilder()
                 .WithCurrentTimestamp()
                 .WithImageUrl(command.User.GetAvatarUrl())
-                .WithTitle($"Access to StarBot Interest Program {uiStatus}")
+                .WithTitle($"Access {uiStatus} to StarBot Interest Program")
                 .WithDescription($"Username: {command.User.Username}\nStatus: {uiStatus}\nScope:\n- #devlog\n- #autosync-backend")
                 .Build());
 
