@@ -1,4 +1,4 @@
-﻿namespace StarBot
+namespace StarBot
 {
     internal static class Config
     {
