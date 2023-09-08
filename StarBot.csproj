@@ -1,4 +1,9 @@
+<<<<<<< HEAD
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+=======
 <Project Sdk="Microsoft.NET.Sdk">
+>>>>>>> main
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>

@@ -8,14 +8,48 @@ using NCrontab;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+<<<<<<< HEAD
+namespace StarBot {
+    internal class Program {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        //public bool debugMode = Config.DEBUG_MODE;
+        //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
+        //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
+        //private List<int> nextUp = new List<int>();
+        private Scheduler scheduler = new Scheduler();
+=======
 namespace StarBot
 {
     internal class Program
     {
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
         public bool debugMode = false;
         private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
         private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
         private List<int> nextUp = new List<int>();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> main
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
         private Database data = new Database();
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg)
@@ -43,10 +77,31 @@ namespace StarBot
         private DiscordSocketClient? client;
         private HttpClient? web;
 
+<<<<<<< HEAD
+        public async Task MainAsync(string[] args) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+            /*if (debugMode) {
+=======
         public async Task MainAsync(string[] args)
         {
             if (debugMode)
             {
+>>>>>>> main
+=======
+            if (debugMode) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+            if (debugMode) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+            if (debugMode) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+            if (debugMode) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
                 Console.WriteLine("Warning, this program is running in debug mode. It will not perform as expected.");
             }
 
@@ -153,8 +208,35 @@ namespace StarBot
             CrontabSchedule soonestSchedule = scheduleList[0];
             int soonestIndex = 0;
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+            await scheduler.addInvokeCommand(guild);
+            await scheduler.schedulerProcess(client, data);
+            await Task.Delay(-1);
+
+            //CrontabSchedule soonestSchedule = scheduleList[0];
+            //int soonestIndex = 0;
+
+            /*while (true) {
+=======
             while (true)
             {
+>>>>>>> main
+=======
+            while (true) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+            while (true) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+            while (true) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+            while (true) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
                 nextUp.Clear();
                 soonestSchedule = scheduleList[0];
                 for (int i = 1; i < scheduleList.Count(); i++)
@@ -202,10 +284,15 @@ namespace StarBot
             var message = await before.GetOrDownloadAsync();
             Console.WriteLine($"{message} -> {after}");
         }
+<<<<<<< HEAD
+        private async Task SlashCommandHandler(SocketSlashCommand command) {
+            switch (command.CommandName) {
+=======
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             switch (command.CommandName)
             {
+>>>>>>> main
                 case "key-modify":
                     await SlashCommands.keySet(command, client, data);
                     break;
