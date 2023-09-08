@@ -13,6 +13,7 @@ namespace StarBot {
     internal class Program {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         //public bool debugMode = Config.DEBUG_MODE;
         //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
         //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
@@ -27,13 +28,18 @@ namespace StarBot
 >>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
 =======
 >>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
         public bool debugMode = false;
         private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
         private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
         private List<int> nextUp = new List<int>();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
 =======
 >>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
 =======
@@ -69,6 +75,7 @@ namespace StarBot
         public async Task MainAsync(string[] args) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             /*if (debugMode) {
 =======
         public async Task MainAsync(string[] args)
@@ -76,6 +83,9 @@ namespace StarBot
             if (debugMode)
             {
 >>>>>>> main
+=======
+            if (debugMode) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
 =======
             if (debugMode) {
 >>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
@@ -191,6 +201,7 @@ namespace StarBot
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             await scheduler.addInvokeCommand(guild);
             await scheduler.schedulerProcess(client, data);
             await Task.Delay(-1);
@@ -203,6 +214,9 @@ namespace StarBot
             while (true)
             {
 >>>>>>> main
+=======
+            while (true) {
+>>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
 =======
             while (true) {
 >>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
