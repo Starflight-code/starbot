@@ -1,5 +1,4 @@
 ﻿using Discord.WebSocket;
-using NCrontab;
 using System.Runtime.InteropServices;
 
 namespace StarBot
@@ -41,16 +40,6 @@ namespace StarBot
                 }
             }
             return false;
-        }
-        public struct scheduledTask {
-            public CrontabSchedule schedule;
-            public Func<DiscordSocketClient, Database, Task> lambda;
-            public string name;
-            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Task> lambda, string name) {
-                this.schedule = schedule;
-                this.lambda = lambda;
-                this.name = name;
-            }
         }
     }
 }
