@@ -1,15 +1,20 @@
 ﻿using Discord;
 using Discord.WebSocket;
 
-namespace StarBot {
-    internal class SlashCommands {
-        public static async Task keySet(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+namespace StarBot
+{
+    internal class SlashCommands
+    {
+        public static async Task keySet(SocketSlashCommand command, DiscordSocketClient? client, Database data)
+        {
 
-            if (Statics.userHasRole(client, command.GuildId, command.User.Id, 696818216080769025)) {
+            if (Statics.userHasRole(client, command.GuildId, command.User.Id, 696818216080769025))
+            {
                 var commandArgs = command.Data.Options.ToArray();
                 string? key = commandArgs[0].Value.ToString();
                 string? value = commandArgs[1].Value.ToString();
-                if (key == null || value == null) {
+                if (key == null || value == null)
+                {
                     await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                     return;
                 }
@@ -19,11 +24,14 @@ namespace StarBot {
                 await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
             }
         }
-        public static async Task keyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
-            if (Statics.userHasRole(client, command.GuildId, command.User.Id, 696818216080769025)) {
+        public static async Task keyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data)
+        {
+            if (Statics.userHasRole(client, command.GuildId, command.User.Id, 696818216080769025))
+            {
                 var commandArgs = command.Data.Options.ToArray();
                 string? key = commandArgs[0].Value.ToString();
-                if (key == null) {
+                if (key == null)
+                {
                     await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                     return;
                 }
@@ -33,19 +41,24 @@ namespace StarBot {
                 await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
             }
         }
-        public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client) {
+        public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client)
+        {
 
             var commandArgs = command.Data.Options.ToArray();
             int interested = (int)commandArgs[0].Value;
-            if (command.GuildId == null) {
+            if (command.GuildId == null)
+            {
                 await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                 return;
             }
             string uiStatus = "";
-            if (interested == 1) {
+            if (interested == 1)
+            {
                 uiStatus = "APPROVED";
                 await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(1143808465194713108);
-            } else {
+            }
+            else
+            {
                 uiStatus = "REMOVED";
                 await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(1143808465194713108);
             }
