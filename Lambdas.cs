@@ -2,9 +2,12 @@
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 
-namespace StarBot {
-    internal class Lambdas {
-        public static Func<DiscordSocketClient, Database, Task> XKCD_Automation = (async (DiscordSocketClient client, Database data) => { // XKCD Automation
+namespace StarBot
+{
+    internal class Lambdas
+    {
+        public static Func<DiscordSocketClient, Database, Task> XKCD_Automation = (async (DiscordSocketClient client, Database data) =>
+        { // XKCD Automation
 
             string url = "https://xkcd.com/info.0.json";
             JObject json = await Program.fetchJSON(url);
@@ -20,19 +23,23 @@ namespace StarBot {
             await channel.SendMessageAsync("", false, newEmbed.Build());
         });
 
-        public static Func<DiscordSocketClient, Database, Task> CatDaily_Automation = (async (DiscordSocketClient client, Database data) => { // Cat Daily API
+        public static Func<DiscordSocketClient, Database, Task> CatDaily_Automation = (async (DiscordSocketClient client, Database data) =>
+        { // Cat Daily API
             string url = "https://www.reddit.com/r/cat/.json?limit=100&t=day";
             JObject json = await Program.fetchJSON(url);
             Random rand = new Random();
             int i = 0;
             int randomValue;
-            while (true) {
+            while (true)
+            {
                 i++;
                 randomValue = rand.Next(100); // 0-99
-                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg"))
+                {
                     break;
                 }
-                if (i >= 150) {
+                if (i >= 150)
+                {
                     json = await Program.fetchJSON(url);
                 }
             }
@@ -53,19 +60,23 @@ namespace StarBot {
             await channel.SendMessageAsync("", false, newEmbed.Build());
         });
 
-        public static Func<DiscordSocketClient, Database, Task> AnimeDaily_Automation = (async (DiscordSocketClient client, Database data) => { // Anime Daily API
+        public static Func<DiscordSocketClient, Database, Task> AnimeDaily_Automation = (async (DiscordSocketClient client, Database data) =>
+        { // Anime Daily API
             string url = "https://www.reddit.com/r/awwnime/.json?limit=100&t=day";
             JObject json = await Program.fetchJSON(url);
             Random rand = new Random();
             int i = 0;
             int randomValue;
-            while (true) {
+            while (true)
+            {
                 i++;
                 randomValue = rand.Next(100); // 0-99
-                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg"))
+                {
                     break;
                 }
-                if (i >= 150) {
+                if (i >= 150)
+                {
                     json = await Program.fetchJSON(url);
                 }
             }
@@ -86,7 +97,8 @@ namespace StarBot {
             await channel.SendMessageAsync("", false, newEmbed.Build());
         });
 
-        public static Func<DiscordSocketClient, Database, Task> QuestionOfTheDay_Automation = (async (DiscordSocketClient client, Database data) => { // Question of the Day
+        public static Func<DiscordSocketClient, Database, Task> QuestionOfTheDay_Automation = (async (DiscordSocketClient client, Database data) =>
+        { // Question of the Day
             string url = "https://www.reddit.com/r/AskReddit/.json?limit=100&t=day";
             JObject json = await Program.fetchJSON(url);
             Random rand = new Random();
@@ -107,19 +119,23 @@ namespace StarBot {
             await channel.SendMessageAsync("", false, newEmbed.Build());
         });
 
-        public static Func<DiscordSocketClient, Database, Task> AniMemesDaily_Automation = (async (DiscordSocketClient client, Database data) => { // Animemes Daily API
+        public static Func<DiscordSocketClient, Database, Task> AniMemesDaily_Automation = (async (DiscordSocketClient client, Database data) =>
+        { // Animemes Daily API
             string url = "https://www.reddit.com/r/animemes/.json?limit=100&t=day";
             JObject json = await Program.fetchJSON(url);
             Random rand = new Random();
             int i = 0;
             int randomValue;
-            while (true) {
+            while (true)
+            {
                 i++;
                 randomValue = rand.Next(100); // 0-99
-                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg"))
+                {
                     break;
                 }
-                if (i >= 150) {
+                if (i >= 150)
+                {
                     json = await Program.fetchJSON(url);
                 }
             }
