@@ -44,7 +44,7 @@ namespace StarBot
         public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client)
         {
             var commandArgs = command.Data.Options.ToArray();
-            int interested = (int)commandArgs[0].Value;
+            Int64 interested = (Int64)commandArgs[0].Value;
             if (command.GuildId == null)
             {
                 await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
@@ -86,6 +86,20 @@ namespace StarBot
                 .WithDescription($"Username: {command.User.Username}\nStatus: {uiStatus}\nScope:\n- #devlog\n- #autosync-backend")
                 .Build());
 
+        }
+        public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data)
+        {
+            await command.DeferAsync(ephemeral: true);
+            if (!Statics.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID))
+            {
+                await command.RespondAsync("You do not have the required permissions to execute this command.", ephemeral: true);
+                return;
+            }
+            var commandArgs = command.Data.Options.ToArray();
+            int taskIndex = unchecked((int)(Int64)commandArgs[0].Value);
+
+            await scheduler.invokeTask(taskIndex, client, data);
+            await command.RespondAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
         }
     }
 }

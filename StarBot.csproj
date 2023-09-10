@@ -1,15 +1,11 @@
-<<<<<<< HEAD
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-=======
-<Project Sdk="Microsoft.NET.Sdk">
->>>>>>> main
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>8602;CS8602</NoWarn>
+    <NoWarn>8602</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
