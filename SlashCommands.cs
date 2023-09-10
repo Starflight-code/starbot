@@ -62,10 +62,12 @@ namespace StarBot
                 uiStatus = "REMOVED";
                 await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(1143808465194713108);
             }
+            await command.RespondAsync($"Your interest in StarBot is appreciated. Your access to backend channels was **{uiStatus}**.\nThis action has been logged. Access to these channels may be revoked at any time for any reason.", ephemeral: true);
+            await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(1143808465194713108);
             await (client.GetChannel(1143815199816699944) as SocketTextChannel).SendMessageAsync(embed: new EmbedBuilder()
                 .WithCurrentTimestamp()
                 .WithImageUrl(command.User.GetAvatarUrl())
-                .WithTitle($"Access {uiStatus} to StarBot Interest Program")
+                .WithTitle($"Access to StarBot Interest Program {uiStatus}")
                 .WithDescription($"Username: {command.User.Username}\nStatus: {uiStatus}\nScope:\n- #devlog\n- #autosync-backend")
                 .Build());
 

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Net;
+using Discord.Rest;
 using Discord.WebSocket;
 using Flurl;
 using Flurl.Http;
@@ -7,69 +8,34 @@ using NCrontab;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-namespace StarBot {
-    internal class Program {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        //public bool debugMode = Config.DEBUG_MODE;
-        //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
-        //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
-        //private List<int> nextUp = new List<int>();
-        private Scheduler scheduler = new Scheduler();
-=======
 namespace StarBot
 {
     internal class Program
     {
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-namespace StarBot {
-    internal class Program {
->>>>>>> parent of 0432ac1 (Updated formatting, migrated to a new IDE)
         public bool debugMode = false;
         private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
         private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
         private List<int> nextUp = new List<int>();
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> main
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
         private Database data = new Database();
         public static Task Main(string[] args) => new Program().MainAsync(args);
-        private Task Log(Discord.LogMessage msg) {
+        private Task Log(Discord.LogMessage msg)
+        {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
         }
 
-        public static async Task<dynamic> fetchJSON(string URL) {
+        public static async Task<dynamic> fetchJSON(string URL)
+        {
             var site = new Url(URL);
             // headers and user agent spoofing are required to avoid a 403 'unauthorized' http error code
             string output = await site.WithHeaders(new { Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", User_Agent = "Mozilla/5.0" }).GetStringAsync();
-            try {
+            try
+            {
                 return JArray.Parse(output);
 
             }
-            catch (Newtonsoft.Json.JsonReaderException) {
+            catch (Newtonsoft.Json.JsonReaderException)
+            {
                 return JObject.Parse(output);
             }
         }
@@ -77,36 +43,10 @@ namespace StarBot {
         private DiscordSocketClient? client;
         private HttpClient? web;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        public async Task MainAsync(string[] args) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            /*if (debugMode) {
-=======
         public async Task MainAsync(string[] args)
         {
             if (debugMode)
             {
->>>>>>> main
-=======
-            if (debugMode) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            if (debugMode) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            if (debugMode) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            if (debugMode) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-        public async Task MainAsync(string[] args) {
-            if (debugMode) {
->>>>>>> parent of 0432ac1 (Updated formatting, migrated to a new IDE)
                 Console.WriteLine("Warning, this program is running in debug mode. It will not perform as expected.");
             }
 
@@ -122,7 +62,8 @@ namespace StarBot {
 
             // client initialization completed
 
-            client.Ready += async () => {
+            client.Ready += async () =>
+            {
                 Console.WriteLine("Bot is connected!");
 
                 var guild = client.GetGuild(696808297805774888);
@@ -160,15 +101,16 @@ namespace StarBot {
 
 
 
-                try {
+                try
+                {
                     // Now that we have our builder, we can call the CreateApplicationCommandAsync method to make our slash command.
                     await guild.DeleteApplicationCommandsAsync();
                     await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
                     await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
                     await guild.CreateApplicationCommandAsync(starbotInterest.Build());
-
                 }
-                catch (HttpException exception) {
+                catch (HttpException exception)
+                {
                     // If our command was invalid, we should catch an ApplicationCommandException. This exception contains the path of the error as well as the error message. You can serialize the Error field in the exception to get a visual of where your error is.
                     var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
 
@@ -178,13 +120,16 @@ namespace StarBot {
 
                 ready = true;
             };
-            while (client.ConnectionState != ConnectionState.Connected && !ready) {
+            while (client.ConnectionState != ConnectionState.Connected && !ready)
+            {
                 await Task.Delay(1000);
             }
-            if (!ready) {
+            if (!ready)
+            {
                 await Task.Delay(2000);
             }
-            if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
+            if (data.fetchValue("FirstRun") == "")
+            { // import data from Discord upon first run
 
                 string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
 
@@ -208,64 +153,42 @@ namespace StarBot {
             CrontabSchedule soonestSchedule = scheduleList[0];
             int soonestIndex = 0;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            await scheduler.addInvokeCommand(guild);
-            await scheduler.schedulerProcess(client, data);
-            await Task.Delay(-1);
-
-            //CrontabSchedule soonestSchedule = scheduleList[0];
-            //int soonestIndex = 0;
-
-            /*while (true) {
-=======
             while (true)
             {
->>>>>>> main
-=======
-            while (true) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            while (true) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            while (true) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            while (true) {
->>>>>>> parent of a52d8a2 (Added a new scheduler and squashed some bugs)
-=======
-            while (true) {
->>>>>>> parent of 0432ac1 (Updated formatting, migrated to a new IDE)
                 nextUp.Clear();
                 soonestSchedule = scheduleList[0];
-                for (int i = 1; i < scheduleList.Count(); i++) {
-                    if (scheduleList[i].GetNextOccurrence(DateTime.Now) < soonestSchedule.GetNextOccurrence(DateTime.Now)) {
+                for (int i = 1; i < scheduleList.Count(); i++)
+                {
+                    if (scheduleList[i].GetNextOccurrence(DateTime.Now) < soonestSchedule.GetNextOccurrence(DateTime.Now))
+                    {
                         soonestSchedule = scheduleList[i];
                         soonestIndex = i;
                     }
                 }
-                for (int i = 0; i < scheduleList.Count(); i++) {
-                    if (soonestSchedule.GetNextOccurrence(DateTime.Now) == scheduleList[i].GetNextOccurrence(DateTime.Now)) {
+                for (int i = 0; i < scheduleList.Count(); i++)
+                {
+                    if (soonestSchedule.GetNextOccurrence(DateTime.Now) == scheduleList[i].GetNextOccurrence(DateTime.Now))
+                    {
                         nextUp.Add(i);
                     }
                 }
                 int waitTime = (int)(soonestSchedule.GetNextOccurrence(DateTime.Now) - DateTime.Now).TotalMilliseconds;
-                if (0 < waitTime) {
-                    if (debugMode) {
+                if (0 < waitTime)
+                {
+                    if (debugMode)
+                    {
                         Console.WriteLine("This program would wait for " + waitTime + " milliseconds (debug)...");
                         await Task.Delay(1000);
-                    } else {
+                    }
+                    else
+                    {
                         Console.WriteLine("Waiting for " + waitTime + " milliseconds...");
                         await Task.Delay(waitTime);
                     }
 
                 }
-                for (int i = 0; i < nextUp.Count; i++) {
+                for (int i = 0; i < nextUp.Count; i++)
+                {
                     await scheduledLambdas[nextUp[i]].Invoke(client, data);
                 }
                 await data.updateDB();
@@ -273,25 +196,16 @@ namespace StarBot {
             }
         }
 
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel) {
+        private async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
+        {
             // If the message was not in the cache, downloading it will result in getting a copy of `after`.
             var message = await before.GetOrDownloadAsync();
             Console.WriteLine($"{message} -> {after}");
         }
-<<<<<<< HEAD
-<<<<<<< HEAD
-        private async Task SlashCommandHandler(SocketSlashCommand command) {
-            switch (command.CommandName) {
-=======
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             switch (command.CommandName)
             {
->>>>>>> main
-=======
-        private async Task SlashCommandHandler(SocketSlashCommand command) {
-            switch (command.CommandName) {
->>>>>>> parent of 0432ac1 (Updated formatting, migrated to a new IDE)
                 case "key-modify":
                     await SlashCommands.keySet(command, client, data);
                     break;
