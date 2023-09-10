@@ -8,7 +8,7 @@ namespace StarBot
         public static async Task keySet(SocketSlashCommand command, DiscordSocketClient? client, Database data)
         {
 
-            if (Statics.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID))
+            if (Statics.userHasRole(client, command.GuildId, command.User.Id, 696818216080769025))
             {
                 var commandArgs = command.Data.Options.ToArray();
                 string? key = commandArgs[0].Value.ToString();
@@ -26,7 +26,7 @@ namespace StarBot
         }
         public static async Task keyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data)
         {
-            if (Statics.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID))
+            if (Statics.userHasRole(client, command.GuildId, command.User.Id, 696818216080769025))
             {
                 var commandArgs = command.Data.Options.ToArray();
                 string? key = commandArgs[0].Value.ToString();
@@ -43,6 +43,7 @@ namespace StarBot
         }
         public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client)
         {
+
             var commandArgs = command.Data.Options.ToArray();
             int interested = (int)commandArgs[0].Value;
             if (command.GuildId == null)
@@ -53,31 +54,13 @@ namespace StarBot
             string uiStatus = "";
             if (interested == 1)
             {
-                if (!Statics.userHasRole(client, command.GuildId, command.User.Id, Config.STARBOT_INTEREST_ROLE_ID))
-                {
-                    uiStatus = "APPROVED";
-                    await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(Config.STARBOT_INTEREST_ROLE_ID);
-                    await command.RespondAsync($"Your interest in StarBot is appreciated. Your access to backend channels was **{uiStatus}**.\nThis action has been logged. Access to these channels may be revoked at any time for any reason.", ephemeral: true);
-                }
-                else
-                {
-                    await command.RespondAsync("You are already enrolled in this program.", ephemeral: true);
-                    return;
-                }
+                uiStatus = "APPROVED";
+                await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(1143808465194713108);
             }
             else
             {
-                if (Statics.userHasRole(client, command.GuildId, command.User.Id, Config.STARBOT_INTEREST_ROLE_ID))
-                {
-                    uiStatus = "REMOVED";
-                    await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(Config.STARBOT_INTEREST_ROLE_ID);
-                    await command.RespondAsync($"Your access to backend channels was **{uiStatus}**.\nThis action has been logged.", ephemeral: true);
-                }
-                else
-                {
-                    await command.RespondAsync("You are not enrolled in this program.", ephemeral: true);
-                    return;
-                }
+                uiStatus = "REMOVED";
+                await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(1143808465194713108);
             }
             await (client.GetChannel(1143815199816699944) as SocketTextChannel).SendMessageAsync(embed: new EmbedBuilder()
                 .WithCurrentTimestamp()
