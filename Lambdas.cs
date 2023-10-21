@@ -67,11 +67,17 @@ namespace StarBot
             Random rand = new Random();
             int i = 0;
             int randomValue;
+            var validPost = (int randomValue, JObject json, Database data) =>
+            {
+                bool condition1 = json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg");
+                bool condition2 = data.fetchValue("lastanimeID") == json["data"]["children"][randomValue]["data"]["subreddit_id"].ToString() + "-" + json["data"]["children"][randomValue]["data"]["id"].ToString();
+                return condition1 && condition2;
+            };
             while (true)
             {
                 i++;
                 randomValue = rand.Next(100); // 0-99
-                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg"))
+                if (validPost(randomValue, json, data))
                 {
                     break;
                 }
@@ -81,6 +87,7 @@ namespace StarBot
                 }
             }
             await data.initializeIterator("AnimeNumber", 1);
+            await data.setValue("lastAnimeID", json["data"]["children"][randomValue]["data"]["subreddit_id"].ToString() + "-" + json["data"]["children"][randomValue]["data"]["id"].ToString());
 
             var channel = client.GetChannel(1099741439476379730) as SocketTextChannel;
             var state = client.ConnectionState;
