@@ -50,10 +50,6 @@ namespace StarBot
 
         public async Task MainAsync(string[] args)
         {
-            /*if (debugMode) {
-                Console.WriteLine("Warning, this program is running in debug mode. It will not perform as expected.");
-            }*/
-
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
@@ -151,19 +147,6 @@ namespace StarBot
                 await data.updateDB();
             }
 
-            //scheduleList.Add(NCrontab.CrontabSchedule.Parse("* * * * *")); // DEBUG
-            /*scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat")); // XKCD Automation
-            scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0 * * *")); // Cat Automation
-            scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0/8 * * *")); // Anime Automation
-            scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0/8 * * *")); // Anime Memes Automation
-            scheduleList.Add(NCrontab.CrontabSchedule.Parse("0 0 * * *")); // Question of the Day Automation
-
-            scheduledLambdas.Add(Lambdas.XKCD_Automation);
-            scheduledLambdas.Add(Lambdas.CatDaily_Automation);
-            scheduledLambdas.Add(Lambdas.AnimeDaily_Automation);
-            scheduledLambdas.Add(Lambdas.AniMemesDaily_Automation);
-            scheduledLambdas.Add(Lambdas.QuestionOfTheDay_Automation);*/
-
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
@@ -173,41 +156,6 @@ namespace StarBot
             await scheduler.addInvokeCommand(guild);
             await scheduler.schedulerProcess(client, data);
             await Task.Delay(-1);
-
-            //CrontabSchedule soonestSchedule = scheduleList[0];
-            //int soonestIndex = 0;
-
-            /*while (true) {
-                nextUp.Clear();
-                soonestSchedule = scheduleList[0];
-                for (int i = 1; i < scheduleList.Count(); i++) {
-                    if (scheduleList[i].GetNextOccurrence(DateTime.Now) < soonestSchedule.GetNextOccurrence(DateTime.Now)) {
-                        soonestSchedule = scheduleList[i];
-                        soonestIndex = i;
-                    }
-                }
-                for (int i = 0; i < scheduleList.Count(); i++) {
-                    if (soonestSchedule.GetNextOccurrence(DateTime.Now) == scheduleList[i].GetNextOccurrence(DateTime.Now)) {
-                        nextUp.Add(i);
-                    }
-                }
-                int waitTime = (int)(soonestSchedule.GetNextOccurrence(DateTime.Now) - DateTime.Now).TotalMilliseconds;
-                if (0 < waitTime) {
-                    if (debugMode) {
-                        Console.WriteLine("This program would wait for " + waitTime + " milliseconds (debug)...");
-                        await Task.Delay(1000);
-                    } else {
-                        Console.WriteLine("Waiting for " + waitTime + " milliseconds...");
-                        await Task.Delay(waitTime);
-                    }
-
-                }
-                for (int i = 0; i < nextUp.Count; i++) {
-                    await scheduledLambdas[nextUp[i]].Invoke(client, data);
-                }
-                await data.updateDB();
-                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
-            }*/
         }
 
         private async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)

@@ -11,14 +11,6 @@
         {
             key = Statics.preProcessValue(key);
             return data.get(key);
-            /*
-            string toFetch = Directory.GetCurrentDirectory() + "\\values\\" + key;
-            toFetch = Statics.buildPath(toFetch);
-            if (System.IO.File.Exists(toFetch)) {
-                return await System.IO.File.ReadAllTextAsync(toFetch);
-            } else {
-                return "";
-            }*/
         }
         public void removeValue(string key)
         {
@@ -30,12 +22,6 @@
             key = Statics.preProcessValue(key);
             await initializeIterator(key);
             string value = fetchValue(key);
-            /*string toFetch = Directory.GetCurrentDirectory() + "\\values\\" + key;
-            toFetch = Statics.buildPath(toFetch);
-            if (System.IO.File.Exists(toFetch)) {
-                string text = await System.IO.File.ReadAllTextAsync(toFetch);
-                int number = 0;
-            */
             int number;
             try
             {
@@ -58,7 +44,6 @@
             {
                 await data.updateSelf();
             }
-            //await System.IO.File.WriteAllTextAsync(toFetch, (++number).ToString());
         }
 
         public async Task setValue(string key, string value, bool updateDB = false)
@@ -69,15 +54,6 @@
             {
                 await data.updateSelf();
             }
-            /*string toFetch = Directory.GetCurrentDirectory() + "\\values\\" + value;
-            toFetch = Statics.buildPath(toFetch);
-            if (System.IO.File.Exists(toFetch)) {
-                await System.IO.File.WriteAllTextAsync(toFetch, setTo);
-            } else {
-                var file = System.IO.File.Create(toFetch);
-                file.Dispose();
-                await System.IO.File.WriteAllTextAsync(toFetch, setTo);
-            }*/
         }
 
         public async Task updateDB()
@@ -101,16 +77,6 @@
                     await data.updateSelf();
                 }
             }
-
-            /*string toFetch = Directory.GetCurrentDirectory() + "\\values\\" + value;
-            toFetch = Statics.buildPath(toFetch);
-            if (System.IO.File.Exists(toFetch)) {
-                return;
-            } else {
-                var file = System.IO.File.Create(toFetch);
-                file.Dispose();
-                await System.IO.File.WriteAllTextAsync(toFetch, startingValue.ToString());
-            }*/
         }
         public string getSerializedDB()
         {
