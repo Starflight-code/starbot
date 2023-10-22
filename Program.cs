@@ -20,7 +20,12 @@ namespace StarBot
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg)
         {
-            Console.WriteLine(msg.ToString());
+#pragma warning disable
+            if (Config.DISCORD_NET_LOGGING == true)
+            {
+                Console.WriteLine(msg.ToString());
+            }
+#pragma warning enable
             return Task.CompletedTask;
         }
 

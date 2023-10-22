@@ -70,7 +70,7 @@ namespace StarBot
             var validPost = (int randomValue, JObject json, Database data) =>
             {
                 bool condition1 = json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg");
-                bool condition2 = data.fetchValue("lastanimeID") == json["data"]["children"][randomValue]["data"]["subreddit_id"].ToString() + "-" + json["data"]["children"][randomValue]["data"]["id"].ToString();
+                bool condition2 = data.fetchValue("lastanimeID") != json["data"]["children"][randomValue]["data"]["subreddit_id"].ToString() + "-" + json["data"]["children"][randomValue]["data"]["id"].ToString();
                 return condition1 && condition2;
             };
             while (true)
