@@ -60,8 +60,15 @@ namespace StarBot
             web = new HttpClient();
             client.Log += Log;
             client.SlashCommandExecuted += SlashCommandHandler;
+            if (args.Length > 0)
+            {
+                await client.LoginAsync(TokenType.Bot, args[0]);
+            }
+            else
+            {
+                Environment.Exit(1);
+            }
 
-            await client.LoginAsync(TokenType.Bot, Config.BOT_TOKEN);
             await client.StartAsync();
 
 

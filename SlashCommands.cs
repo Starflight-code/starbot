@@ -98,7 +98,7 @@ namespace StarBot
             var commandArgs = command.Data.Options.ToArray();
             int taskIndex = unchecked((int)(Int64)commandArgs[0].Value);
 
-            //await scheduler.invokeTask(taskIndex, client, data);
+            await scheduler.invokeTask(taskIndex, client, data);
             await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
         }
     }
