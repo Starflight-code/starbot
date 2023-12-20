@@ -6,10 +6,8 @@ using Flurl.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace StarBot
-{
-    internal class Program
-    {
+namespace StarBot {
+    internal class Program {
         //public bool debugMode = Config.DEBUG_MODE;
         //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
         //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
@@ -18,50 +16,43 @@ namespace StarBot
         private Database data = new Database();
         SocketGuild? guild;
         public static Task Main(string[] args) => new Program().MainAsync(args);
-        private Task Log(Discord.LogMessage msg)
-        {
+        private Task Log(Discord.LogMessage msg) {
 #pragma warning disable
-            if (Config.DISCORD_NET_LOGGING == true)
-            {
+            if (Config.DISCORD_NET_LOGGING) {
                 Console.WriteLine(msg.ToString());
             }
 #pragma warning enable
             return Task.CompletedTask;
         }
 
-        public static async Task<dynamic> fetchJSON(string URL)
-        {
+        public static dynamic fetchJSON(string URL) {
             var site = new Url(URL);
             // headers and user agent spoofing are required to avoid a 403 'unauthorized' http error code
-            string output = await site.WithHeaders(new { Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", User_Agent = "Mozilla/5.0" }).GetStringAsync();
-            try
-            {
-                return JArray.Parse(output);
+            System.Threading.Tasks.Task<string> output = site.WithHeaders(new { Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", User_Agent = "Mozilla/5.0" }).GetStringAsync();
+            output.Wait();
+            string outString = output.Result;
+            try {
+                return JArray.Parse(outString);
 
-            }
-            catch (Newtonsoft.Json.JsonReaderException)
-            {
-                return JObject.Parse(output);
+            } catch (Newtonsoft.Json.JsonReaderException) {
+                return JObject.Parse(outString);
             }
         }
 
         private DiscordSocketClient? client;
         private HttpClient? web;
 
-        public async Task MainAsync(string[] args)
-        {
+        public async Task MainAsync(string[] args) {
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
             web = new HttpClient();
             client.Log += Log;
             client.SlashCommandExecuted += SlashCommandHandler;
-            if (args.Length > 0)
-            {
-                await client.LoginAsync(TokenType.Bot, args[0]);
-            }
-            else
-            {
+            if (args.Length > 0 || Config.DEBUG_MODE) {
+                await client.LoginAsync(TokenType.Bot, Config.DEBUG_MODE ? Config.KEY : args[0]); // uses Config key in debug mode
+            } else {
+                Console.WriteLine("You have not specified a key and the this binary is not a debug variant.");
                 Environment.Exit(1);
             }
 
@@ -70,8 +61,7 @@ namespace StarBot
 
             // client initialization completed
 
-            client.Ready += async () =>
-            {
+            client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
                 guild = client.GetGuild(696808297805774888);
 
@@ -110,17 +100,14 @@ namespace StarBot
 
 
 
-                try
-                {
+                try {
                     // Now that we have our builder, we can call the CreateApplicationCommandAsync method to make our slash command.
                     await guild.DeleteApplicationCommandsAsync();
                     await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
                     await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
                     await guild.CreateApplicationCommandAsync(starbotInterest.Build());
 
-                }
-                catch (HttpException exception)
-                {
+                } catch (HttpException exception) {
                     // If our command was invalid, we should catch an ApplicationCommandException. This exception contains the path of the error as well as the error message. You can serialize the Error field in the exception to get a visual of where your error is.
                     var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
 
@@ -130,16 +117,13 @@ namespace StarBot
 
                 ready = true;
             };
-            while (client.ConnectionState != ConnectionState.Connected && !ready)
-            {
+            while (client.ConnectionState != ConnectionState.Connected && !ready) {
                 await Task.Delay(1000);
             }
-            if (!ready)
-            {
+            if (!ready) {
                 await Task.Delay(2000);
             }
-            if (data.fetchValue("FirstRun") == "")
-            { // import data from Discord upon first run
+            if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
 
                 string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
 
@@ -158,17 +142,14 @@ namespace StarBot
             await Task.Delay(-1);
         }
 
-        private async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
-        {
+        private async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel) {
             // If the message was not in the cache, downloading it will result in getting a copy of `after`.
             var message = await before.GetOrDownloadAsync();
             Console.WriteLine($"{message} -> {after}");
         }
-        private async Task SlashCommandHandler(SocketSlashCommand command)
-        {
+        private async Task SlashCommandHandler(SocketSlashCommand command) {
             if (client == null) { return; }
-            switch (command.CommandName)
-            {
+            switch (command.CommandName) {
                 case "key-modify":
                     await SlashCommands.keySet(command, client, data);
                     break;
