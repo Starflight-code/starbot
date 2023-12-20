@@ -30,8 +30,12 @@ namespace StarBot {
             while (true) {
                 i++;
                 randomValue = rand.Next(100); // 0-99
-                if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
-                    break;
+                try {
+                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                        break;
+                    }
+                } catch (System.NullReferenceException) {
+                    Console.WriteLine("Null Pointer Exception in AniMemesDaily Lambda");
                 }
                 if (i >= 150) {
                     json = Program.fetchJSON(url);
@@ -68,8 +72,12 @@ namespace StarBot {
             while (true) {
                 i++;
                 randomValue = rand.Next(100); // 0-99
-                if (validPost(randomValue, json, data)) {
-                    break;
+                try {
+                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                        break;
+                    }
+                } catch (System.NullReferenceException) {
+                    Console.WriteLine("Null Pointer Exception in AniMemesDaily Lambda");
                 }
                 if (i >= 150) {
                     json = Program.fetchJSON(url);
