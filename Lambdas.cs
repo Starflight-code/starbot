@@ -35,7 +35,7 @@ namespace StarBot {
                         break;
                     }
                 } catch (System.NullReferenceException) {
-                    Console.WriteLine("Null Pointer Exception in AniMemesDaily Lambda");
+                    Console.WriteLine("Null Pointer Exception in CatDaily Lambda");
                 }
                 if (i >= 150) {
                     json = Program.fetchJSON(url);
@@ -77,7 +77,7 @@ namespace StarBot {
                         break;
                     }
                 } catch (System.NullReferenceException) {
-                    Console.WriteLine("Null Pointer Exception in AniMemesDaily Lambda");
+                    Console.WriteLine("Null Pointer Exception in AnimeDaily Lambda");
                 }
                 if (i >= 150) {
                     json = Program.fetchJSON(url);
@@ -132,7 +132,7 @@ namespace StarBot {
                 i++;
                 randomValue = rand.Next(100); // 0-99
                 try {
-                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg") || json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpeg")) {
                         break;
                     }
                 } catch (System.NullReferenceException) {
