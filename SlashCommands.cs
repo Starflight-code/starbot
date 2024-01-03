@@ -20,22 +20,25 @@ namespace StarBot {
             }
         }
         public static async Task keyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
-            if (Statics.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
-                var commandArgs = command.Data.Options.ToArray();
-                string? key = commandArgs[0].Value.ToString();
-                if (key == null) {
-                    await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
-                    return;
-                }
-                data.removeValue(key);
-                await command.RespondAsync("Changes applied: \"" + key + "\" - REMOVED" + "\nChanges will sync immediately.", ephemeral: true);
-                await data.updateDB();
-                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
+            if (!UserManager.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
+                return;
+            } // permission check
+
+            var commandArgs = command.Data.Options.ToArray();
+            string? key = commandArgs[0].Value.ToString();
+            if (key == null) { // argument check
+                await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
+                return;
             }
+
+            data.removeValue(key);
+            await command.RespondAsync("Changes applied: \"" + key + "\" - REMOVED" + "\nChanges will sync immediately.", ephemeral: true);
+            await data.updateDB();
+            await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
         }
         public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client) {
             var commandArgs = command.Data.Options.ToArray();
-            Int64 interested = (Int64)commandArgs[0].Value;
+            long interested = (long)commandArgs[0].Value;
             if (command.GuildId == null) {
                 await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                 return;

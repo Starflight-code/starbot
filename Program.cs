@@ -17,11 +17,7 @@ namespace StarBot {
         SocketGuild? guild;
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
-#pragma warning disable
-            if (Config.DISCORD_NET_LOGGING) {
-                Console.WriteLine(msg.ToString());
-            }
-#pragma warning enable
+            Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
         }
 
@@ -32,10 +28,10 @@ namespace StarBot {
             output.Wait();
             string outString = output.Result;
             try {
-                return JArray.Parse(outString);
+                return JObject.Parse(outString);
 
             } catch (Newtonsoft.Json.JsonReaderException) {
-                return JObject.Parse(outString);
+                return JArray.Parse(outString);
             }
         }
 
@@ -47,12 +43,14 @@ namespace StarBot {
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
             web = new HttpClient();
-            client.Log += Log;
+            if (Config.DISCORD_NET_LOGGING) { // only handles the log event if logging is enabled
+                client.Log += Log;
+            }
             client.SlashCommandExecuted += SlashCommandHandler;
             if (args.Length > 0 || Config.DEBUG_MODE) {
                 await client.LoginAsync(TokenType.Bot, Config.DEBUG_MODE ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
-                Console.WriteLine("You have not specified a key and the this binary is not a debug variant.");
+                Console.WriteLine("You have not specified a key and this binary is not in debug mode.");
                 Environment.Exit(1);
             }
 

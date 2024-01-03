@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
@@ -18,62 +19,48 @@ namespace StarBot {
             newEmbed.ImageUrl = json["img"].ToString();
             newEmbed.WithFooter("powered by xkcd.com");
 
-            await channel.SendMessageAsync("", false, newEmbed.Build());
+            if (!Config.DEBUG_MODE) {
+                await channel.SendMessageAsync("", false, newEmbed.Build());
+            }
         });
 
         public static Func<DiscordSocketClient, Database, Task> CatDaily_Automation = (async (DiscordSocketClient client, Database data) => { // Cat Daily API
             string url = "https://www.reddit.com/r/cat/.json?limit=100&t=day";
-            JObject json = Program.fetchJSON(url);
-            Random rand = new Random();
-            int i = 0;
-            int randomValue;
-            while (true) {
-                i++;
-                randomValue = rand.Next(100); // 0-99
-                try {
-                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
-                        break;
-                    }
-                } catch (System.NullReferenceException) {
-                    Console.WriteLine("Null Pointer Exception in CatDaily Lambda");
-                }
-                if (i >= 150) {
-                    json = Program.fetchJSON(url);
-                }
-            }
+
             await data.initializeIterator("CatNumber", 1);
 
             var channel = client.GetChannel(1106385469312352288) as SocketTextChannel;
-            var state = client.ConnectionState;
+
+            JToken? post = WebManager.selectRandomRedditPost(url);
 
             EmbedBuilder newEmbed = new EmbedBuilder();
-            newEmbed.Title = "Daily Cat Image #" + (data.fetchValue("CatNumber"));
-            newEmbed.Description = json["data"]["children"][randomValue]["data"]["title"] + "\nhttps://reddit.com" +
-                 json["data"]["children"][randomValue]["data"]["permalink"];
-            newEmbed.ImageUrl = json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString();
+            newEmbed.Title = $"Daily Cat Image #{data.fetchValue("CatNumber")}";
+            newEmbed.Description = $"{post["title"]}\n" +
+                                   $"https://reddit.com{post["permalink"]}";
+            newEmbed.ImageUrl = post["url_overridden_by_dest"].ToString();
             newEmbed.WithFooter("powered by https://reddit.com/r/cats/");
 
             await data.iterateValue("CatNumber");
 
-            await channel.SendMessageAsync("", false, newEmbed.Build());
+            if (!Config.DEBUG_MODE) {
+                await channel.SendMessageAsync("", false, newEmbed.Build());
+            }
         });
 
         public static Func<DiscordSocketClient, Database, Task> AnimeDaily_Automation = (async (DiscordSocketClient client, Database data) => { // Anime Daily API
             string url = "https://www.reddit.com/r/awwnime/.json?limit=100&t=day";
             JObject json = Program.fetchJSON(url);
             Random rand = new Random();
+
+            JToken? post;
             int i = 0;
             int randomValue;
-            var validPost = (int randomValue, JObject json, Database data) => {
-                bool condition1 = json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg") || json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpeg");
-                bool condition2 = data.fetchValue("lastanimeID") != json["data"]["children"][randomValue]["data"]["subreddit_id"].ToString() + "-" + json["data"]["children"][randomValue]["data"]["id"].ToString();
-                return condition1 && condition2;
-            };
             while (true) {
                 i++;
                 randomValue = rand.Next(100); // 0-99
                 try {
-                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg")) {
+                    if (json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpg") || json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString().EndsWith("jpeg")) {
+                        post = json["data"]["children"][randomValue]["data"];
                         break;
                     }
                 } catch (System.NullReferenceException) {
@@ -84,7 +71,7 @@ namespace StarBot {
                 }
             }
             await data.initializeIterator("AnimeNumber", 1);
-            await data.setValue("lastAnimeID", json["data"]["children"][randomValue]["data"]["subreddit_id"].ToString() + "-" + json["data"]["children"][randomValue]["data"]["id"].ToString());
+            await data.setValue("lastAnimeIDs", WebManager.addNewPostID(data.fetchValue("lastanimeIDs"), WebManager.generatePostID(post)));
 
             var channel = client.GetChannel(1099741439476379730) as SocketTextChannel;
             var state = client.ConnectionState;
@@ -97,13 +84,14 @@ namespace StarBot {
             newEmbed.WithFooter("powered by https://reddit.com/r/awwnime/");
 
             await data.iterateValue("AnimeNumber");
-
-            await channel.SendMessageAsync("", false, newEmbed.Build());
+            if (!Config.DEBUG_MODE) {
+                await channel.SendMessageAsync("", false, newEmbed.Build());
+            }
         });
 
         public static Func<DiscordSocketClient, Database, Task> QuestionOfTheDay_Automation = (async (DiscordSocketClient client, Database data) => { // Question of the Day
             string url = "https://www.reddit.com/r/AskReddit/.json?limit=100&t=day";
-            JObject json = await Program.fetchJSON(url);
+            JObject json = Program.fetchJSON(url);
             Random rand = new Random();
             int randomValue = rand.Next(100); // 0-99
             await data.initializeIterator("QuestionNumber", 1);
@@ -119,7 +107,9 @@ namespace StarBot {
 
             await data.iterateValue("QuestionNumber");
 
-            await channel.SendMessageAsync("", false, newEmbed.Build());
+            if (!Config.DEBUG_MODE) {
+                await channel.SendMessageAsync("", false, newEmbed.Build());
+            }
         });
 
         public static Func<DiscordSocketClient, Database, Task> AniMemesDaily_Automation = (async (DiscordSocketClient client, Database data) => { // Animemes Daily API
@@ -156,7 +146,9 @@ namespace StarBot {
 
             await data.iterateValue("AnimemesNumber");
 
-            await channel.SendMessageAsync("", false, newEmbed.Build());
+            if (!Config.DEBUG_MODE) {
+                await channel.SendMessageAsync("", false, newEmbed.Build());
+            }
         });
     }
 }

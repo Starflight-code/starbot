@@ -14,6 +14,12 @@ namespace StarBot {
             tasks.Add(new Statics.scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
+            if (Config.DEBUG_MODE) {
+                for (int i = 0; i < tasks.Count(); i++) {
+                    nextUp.Add(i);
+                }
+                return;
+            }
             nextUp.Clear();
             int soonestIndex = 0;
             for (int i = 0; i < tasks.Count(); i++) {
@@ -37,7 +43,9 @@ namespace StarBot {
         }
         public async Task databaseUpdate(DiscordSocketClient client, Database data) {
             await data.updateDB();
-            await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
+            if (!Config.DEBUG_MODE) {
+                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
+            }
         }
 
         public async Task addInvokeCommand(SocketGuild? guild) {
@@ -72,24 +80,22 @@ namespace StarBot {
             Console.WriteLine("Queued Tasks: " + queued);
         }
         public async Task schedulerProcess(DiscordSocketClient client, Database data) {
-            while (true) {
-                findNextUp();
-                logNextUp();
-                await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
-                try {
+            try {
+                while (true) {
+                    findNextUp();
+                    logNextUp();
+                    await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
                     for (int i = 0; i < nextUp.Count(); i++) {
                         await tasks[nextUp[i]].lambda.Invoke(client, data);
                         Console.WriteLine($"Executed Task {getTaskName(i)}");
                     }
-                } catch (Exception e) // logs exceptions to Discord
-                  {
-                    var channel = client.GetChannel(1187007545357905980) as SocketTextChannel;
-                    await channel.SendMessageAsync(DateTime.Now.ToString() + ": " + e.Message);
-                    throw;
-                }
-                if (!Config.DEBUG_MODE) {
                     await databaseUpdate(client, data);
                 }
+            } catch (Exception e) // logs exceptions to Discord
+                    {
+                var channel = client.GetChannel(1187007545357905980) as SocketTextChannel;
+                await channel.SendMessageAsync(DateTime.Now.ToString() + ": " + e.Message);
+                throw;
             }
         }
     }

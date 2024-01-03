@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace StarBot {
     internal class DatabaseObject {
@@ -36,29 +37,22 @@ namespace StarBot {
             return data.TryGetValue(key, out string? _);
         }
 
+
+
         public bool populateSelf() {
-            string[] lines;
-            try { lines = File.ReadAllLines(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db")); } catch (FileNotFoundException) {
+            if (!File.Exists(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"))) {
                 return false;
-            }
-            string databaseJson = "";
-            for (int i = 0; i < lines.Length; i++) {
-                if (i != 0) {
-                    databaseJson += "\n";
-                }
-                databaseJson += lines[i];
-            }
-            Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(databaseJson);
+            };
+
+            string dbString = File.ReadAllText(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"));
+            Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(dbString);
             if (db == null) {
                 return false;
             }
 
             foreach (string key in db.Keys) {
                 db.TryGetValue(key, out string? value);
-                if (value == null) {
-                    value = "";
-                }
-                add(key, value);
+                add(key, value == null ? "" : value); // sets null values to 0 size strings
             }
             return true;
         }
@@ -79,7 +73,7 @@ namespace StarBot {
         }
         public async Task updateSelf() {
             string database = JsonConvert.SerializeObject(data);
-            await File.WriteAllLinesAsync(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"), database.Split('\n'));
+            await File.WriteAllTextAsync(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"), database);
         }
 
         public string getSerializedSelf() {

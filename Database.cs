@@ -36,6 +36,7 @@
 
         public async Task setValue(string key, string value, bool updateDB = false) {
             value = Statics.preProcessValue(value);
+            key = Statics.preProcessValue(key);
             data.add(key, value);
             if (updateDB) {
                 await data.updateSelf();
