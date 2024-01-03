@@ -6,7 +6,7 @@ using StarBot;
 
 class WebManager {
 
-    static dynamic fetchJSON(string URL) {
+    static dynamic FetchJSON(string URL) {
         var site = new Url(URL);
         // headers and user agent spoofing are required to avoid a 403 'unauthorized' http error code
         System.Threading.Tasks.Task<string> output = site.WithHeaders(new { Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", User_Agent = "Mozilla/5.0" }).GetStringAsync();
@@ -19,7 +19,7 @@ class WebManager {
             return JArray.Parse(outString);
         }
     }
-    public static bool isLinkToImage(string link) {
+    public static bool IsLinkToImage(string link) {
         string[] extensions = {
             ".jpg",
             ".jpeg",
@@ -36,11 +36,11 @@ class WebManager {
 
     }
 
-    public static string generatePostID(JToken? post) {
+    public static string GeneratePostID(JToken? post) {
         return post["subreddit_id"].ToString() + "-" + post["id"].ToString();
     }
 
-    public static string addNewPostID(string postIDString, string newPostID) {
+    public static string AddNewPostID(string postIDString, string newPostID) {
         List<string> postIDs;
         if (postIDString != "") {
             postIDs = postIDString.Split(",").ToList();
@@ -54,13 +54,17 @@ class WebManager {
         return string.Join(",", postIDs);
     }
 
-    public static bool duplicateAndImageCheck(JToken? post, string postIDHistory) {
-        if (!isLinkToImage(post["url_overridden_by_dest"].ToString())) {
+    public static bool DuplicateAndImageCheck(JToken? post, string postIDHistory) {
+        try {
+            if (!IsLinkToImage(post["url_overridden_by_dest"].ToString())) {
+                return false;
+            }
+        } catch (NullReferenceException) {
             return false;
         }
 
         string[] postIDs = postIDHistory.Split(",");
-        string currentPostID = generatePostID(post);
+        string currentPostID = GeneratePostID(post);
         for (int i = 0; i < postIDs.Length; i++) {
             if (currentPostID == postIDs[i]) {
                 return false;
@@ -69,38 +73,42 @@ class WebManager {
         return true;
     }
 
-    public static JToken? selectRandomRedditPost(string url) {
-        JObject json = fetchJSON(url);
-        Random rand = new Random();
+    public static JToken? SelectRandomRedditPost(string url, bool containsImage = true) {
+        JObject json = FetchJSON(url);
+        Random rand = new();
         int i = 0;
         int randomValue;
         while (true) {
             i++;
             randomValue = rand.Next(100); // 0-99
-            if (isLinkToImage(json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString())) {
-                break;
+            try {
+                if (!containsImage || IsLinkToImage(json["data"]["children"][randomValue]["data"]["url_overridden_by_dest"].ToString())) {
+                    break;
+                }
+            } catch (NullReferenceException) {
+                // ignores null refrences
             }
             if (i >= 150) {
-                json = fetchJSON(url);
+                json = FetchJSON(url);
             }
         }
         return json["data"]["children"][randomValue]["data"];
     }
 
-    public static JToken? selectRandomRedditPost(string url, string lastIDCache) {
-        JObject json = fetchJSON(url);
-        Random rand = new Random();
+    public static JToken? SelectRandomRedditPost(string url, string lastIDCache) {
+        JObject json = FetchJSON(url);
+        Random rand = new();
         int i = 0;
         int randomValue;
         while (true) {
             i++;
             randomValue = rand.Next(100); // 0-99
             JToken? token = json["data"]["children"][randomValue]["data"];
-            if (duplicateAndImageCheck(token, lastIDCache)) {
+            if (DuplicateAndImageCheck(token, lastIDCache)) {
                 break;
             }
             if (i >= 150) {
-                json = fetchJSON(url);
+                json = FetchJSON(url);
             }
         }
         return json["data"]["children"][randomValue]["data"];

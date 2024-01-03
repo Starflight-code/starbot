@@ -12,8 +12,8 @@ namespace StarBot {
         //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
         //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
         //private List<int> nextUp = new List<int>();
-        private Scheduler scheduler = new Scheduler();
-        private Database data = new Database();
+        private Scheduler scheduler = new();
+        private Database data = new();
         SocketGuild? guild;
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {

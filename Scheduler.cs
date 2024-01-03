@@ -4,8 +4,8 @@ using NCrontab;
 
 namespace StarBot {
     internal class Scheduler {
-        List<Statics.scheduledTask> tasks = new List<Statics.scheduledTask>();
-        List<int> nextUp = new List<int>();
+        List<Statics.scheduledTask> tasks = new();
+        List<int> nextUp = new();
 
         public string getTaskName(int taskIndex) {
             return tasks[taskIndex].name;
@@ -15,20 +15,20 @@ namespace StarBot {
         }
         public void findNextUp() {
             if (Config.DEBUG_MODE) {
-                for (int i = 0; i < tasks.Count(); i++) {
+                for (int i = 0; i < tasks.Count; i++) {
                     nextUp.Add(i);
                 }
                 return;
             }
             nextUp.Clear();
             int soonestIndex = 0;
-            for (int i = 0; i < tasks.Count(); i++) {
+            for (int i = 0; i < tasks.Count; i++) {
                 if (tasks[i].schedule.GetNextOccurrence(DateTime.Now) < tasks[soonestIndex].schedule.GetNextOccurrence(DateTime.Now)) {
                     soonestIndex = i;
                 }
             }
             DateTime soonestOccurrence = tasks[soonestIndex].schedule.GetNextOccurrence(DateTime.Now);
-            for (int i = 0; i < tasks.Count(); i++) {
+            for (int i = 0; i < tasks.Count; i++) {
                 if (tasks[i].schedule.GetNextOccurrence(DateTime.Now) == soonestOccurrence) {
                     nextUp.Add(i);
                 }
@@ -57,7 +57,7 @@ namespace StarBot {
                 .WithDescription("Which task would you like to invoke?")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer);
-            for (int i = 0; i < tasks.Count(); i++) {
+            for (int i = 0; i < tasks.Count; i++) {
                 builder.AddChoice(tasks[i].name, i);
             }
             scheduledTaskInvoke.AddOption(builder);
@@ -71,7 +71,7 @@ namespace StarBot {
         public void logNextUp() {
             Console.WriteLine("Waiting until " + waitTimeReadable());
             string queued = "";
-            for (int j = 0; j < nextUp.Count(); j++) {
+            for (int j = 0; j < nextUp.Count; j++) {
                 if (j != 0) {
                     queued += ", ";
                 }
@@ -85,7 +85,7 @@ namespace StarBot {
                     findNextUp();
                     logNextUp();
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
-                    for (int i = 0; i < nextUp.Count(); i++) {
+                    for (int i = 0; i < nextUp.Count; i++) {
                         await tasks[nextUp[i]].lambda.Invoke(client, data);
                         Console.WriteLine($"Executed Task {getTaskName(i)}");
                     }
@@ -94,7 +94,7 @@ namespace StarBot {
             } catch (Exception e) // logs exceptions to Discord
                     {
                 var channel = client.GetChannel(1187007545357905980) as SocketTextChannel;
-                await channel.SendMessageAsync(DateTime.Now.ToString() + ": " + e.Message);
+                await channel.SendMessageAsync(DateTime.Now.ToString() + ": " + e.Message + "\n" + e.StackTrace);
                 throw;
             }
         }
