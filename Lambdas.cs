@@ -6,12 +6,11 @@ using Newtonsoft.Json.Linq;
 
 namespace StarBot {
     internal class Lambdas {
-        public static Func<DiscordSocketClient, Database, Task> XKCD_Automation = async (DiscordSocketClient client, Database data) => { // XKCD Automation
+        public static Func<DiscordSocketClient, Database, MemoryCache, Task> XKCD_Automation = async (DiscordSocketClient client, Database data, MemoryCache cache) => { // XKCD Automation
 
             string url = "https://xkcd.com/info.0.json";
             JObject json = Program.fetchJSON(url);
             var channel = client.GetChannel(1106385489180758056) as SocketTextChannel;
-            var state = client.ConnectionState;
 
             EmbedBuilder newEmbed = new() {
                 Title = json["safe_title"] + " - " + json["num"],
@@ -25,14 +24,16 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, Task> CatDaily_Automation = async (DiscordSocketClient client, Database data) => { // Cat Daily API
+        public static Func<DiscordSocketClient, Database, MemoryCache, Task> CatDaily_Automation = async (DiscordSocketClient client, Database data, MemoryCache cache) => { // Cat Daily API
             string url = "https://www.reddit.com/r/cat/.json?limit=100&t=day";
 
             await data.initializeIterator("CatNumber", 1);
 
             var channel = client.GetChannel(1106385469312352288) as SocketTextChannel;
 
-            JToken? post = WebManager.SelectRandomRedditPost(url);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastCatIDs"), cache);
+
+            await data.setValue("lastCatIDs", WebManager.AddNewPostID(data.fetchValue("lastCatIDs"), WebManager.GeneratePostID(post)));
 
             EmbedBuilder newEmbed = new() {
                 Title = $"Daily Cat Image #{data.fetchValue("CatNumber")}",
@@ -49,17 +50,14 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, Task> AnimeDaily_Automation = async (DiscordSocketClient client, Database data) => { // Anime Daily API
+        public static Func<DiscordSocketClient, Database, MemoryCache, Task> AnimeDaily_Automation = async (DiscordSocketClient client, Database data, MemoryCache cache) => { // Anime Daily API
             string url = "https://www.reddit.com/r/awwnime/.json?limit=100&t=day";
-            JObject json = Program.fetchJSON(url);
-            Random rand = new();
 
-            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastanimeIDs"));
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastanimeIDs"), cache);
             await data.initializeIterator("AnimeNumber", 1);
             await data.setValue("lastAnimeIDs", WebManager.AddNewPostID(data.fetchValue("lastanimeIDs"), WebManager.GeneratePostID(post)));
 
             var channel = client.GetChannel(1099741439476379730) as SocketTextChannel;
-            var state = client.ConnectionState;
 
             EmbedBuilder newEmbed = new() {
                 Title = "Anime Image #" + data.fetchValue("AnimeNumber"),
@@ -75,13 +73,13 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, Task> QuestionOfTheDay_Automation = async (DiscordSocketClient client, Database data) => { // Question of the Day
+        public static Func<DiscordSocketClient, Database, MemoryCache, Task> QuestionOfTheDay_Automation = async (DiscordSocketClient client, Database data, MemoryCache cache) => { // Question of the Day
             string url = "https://www.reddit.com/r/AskReddit/.json?limit=100&t=day";
-            JToken? post = WebManager.SelectRandomRedditPost(url, false);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastQuestionOfTheDayIDs"), cache, false);
             await data.initializeIterator("QuestionNumber", 1);
+            await data.setValue("lastQuestionOfTheDayIDs", WebManager.AddNewPostID(data.fetchValue("lastQuestionOfTheDayIDs"), WebManager.GeneratePostID(post)));
 
             var channel = client.GetChannel(1141893287981088798) as SocketTextChannel;
-            var state = client.ConnectionState;
 
             EmbedBuilder newEmbed = new() {
                 Title = $"Question of the Day #{data.fetchValue("QuestionNumber")}",
@@ -97,13 +95,13 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, Task> AniMemesDaily_Automation = async (DiscordSocketClient client, Database data) => { // Animemes Daily API
+        public static Func<DiscordSocketClient, Database, MemoryCache, Task> AniMemesDaily_Automation = async (DiscordSocketClient client, Database data, MemoryCache cache) => { // Animemes Daily API
             string url = "https://www.reddit.com/r/animemes/.json?limit=100&t=day";
-            JToken? post = WebManager.SelectRandomRedditPost(url);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastAnimemesIDs"), cache);
             await data.initializeIterator("AnimemesNumber", 1);
+            await data.setValue("lastAnimemesIDs", WebManager.AddNewPostID(data.fetchValue("lastAnimemesIDs"), WebManager.GeneratePostID(post)));
 
             var channel = client.GetChannel(1124438394903207956) as SocketTextChannel;
-            var state = client.ConnectionState;
 
             EmbedBuilder newEmbed = new() {
                 Title = "Anime Meme #" + data.fetchValue("AnimemesNumber"),

@@ -158,7 +158,7 @@ namespace StarBot {
                     await SlashCommands.starbotInterest(command, client);
                     break;
                 case "execute-task":
-                    await SlashCommands.executeTask(command, scheduler, client, data);
+                    await SlashCommands.executeTask(command, scheduler, client, data, new MemoryCache()); // will not use scheduler cache, manual commands may be slower
                     break;
             }
         }

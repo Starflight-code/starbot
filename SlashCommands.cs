@@ -71,7 +71,7 @@ namespace StarBot {
                 .Build());
 
         }
-        public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data) {
+        public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCache cache) {
             await command.DeferAsync(ephemeral: true);
             if (!Statics.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
                 await command.FollowupAsync("You do not have the required permissions to execute this command.", ephemeral: true);
@@ -80,7 +80,7 @@ namespace StarBot {
             var commandArgs = command.Data.Options.ToArray();
             int taskIndex = unchecked((int)(Int64)commandArgs[0].Value);
 
-            await scheduler.invokeTask(taskIndex, client, data);
+            await scheduler.invokeTask(taskIndex, client, data, cache);
             await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
         }
     }

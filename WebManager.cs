@@ -73,8 +73,21 @@ class WebManager {
         return true;
     }
 
-    public static JToken? SelectRandomRedditPost(string url, bool containsImage = true) {
-        JObject json = FetchJSON(url);
+    public static JToken? SelectRandomRedditPost(string url, MemoryCache? cache = null, bool containsImage = true) {
+        bool useCache = true;
+        if (cache == null || default(JObject) == cache.RequestFromCache<JObject>(url)) {
+            useCache = false;
+        }
+        JObject? json;
+        switch (useCache) {
+            case true:
+                json = cache.RequestFromCache<JObject>(url);
+                break;
+            case false:
+                json = FetchJSON(url);
+                cache.AddToCache(url, DateTime.Now.AddHours(Config.HOURS_TO_CACHE), json);
+                break;
+        }
         Random rand = new();
         int i = 0;
         int randomValue;
@@ -95,8 +108,20 @@ class WebManager {
         return json["data"]["children"][randomValue]["data"];
     }
 
-    public static JToken? SelectRandomRedditPost(string url, string lastIDCache) {
-        JObject json = FetchJSON(url);
+    public static JToken? SelectRandomRedditPost(string url, string lastIDCache, MemoryCache? cache = null, bool containsImage = true) {
+        bool useCache = true;
+        if (cache == null || default(JObject) == cache.RequestFromCache<JObject>(url)) {
+            useCache = false;
+        }
+        JObject? json;
+        switch (useCache) {
+            case true:
+                json = cache.RequestFromCache<JObject>(url);
+                break;
+            case false:
+                json = FetchJSON(url);
+                break;
+        }
         Random rand = new();
         int i = 0;
         int randomValue;
@@ -104,12 +129,15 @@ class WebManager {
             i++;
             randomValue = rand.Next(100); // 0-99
             JToken? token = json["data"]["children"][randomValue]["data"];
-            if (DuplicateAndImageCheck(token, lastIDCache)) {
+            if (!containsImage || DuplicateAndImageCheck(token, lastIDCache)) {
                 break;
             }
             if (i >= 150) {
                 json = FetchJSON(url);
             }
+        }
+        if (!useCache) {
+            cache.AddToCache(url, DateTime.Now.AddHours(Config.HOURS_TO_CACHE), json);
         }
         return json["data"]["children"][randomValue]["data"];
     }

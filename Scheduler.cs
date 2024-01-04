@@ -1,3 +1,4 @@
+using System.Net.Cache;
 using Discord;
 using Discord.WebSocket;
 using NCrontab;
@@ -10,7 +11,7 @@ namespace StarBot {
         public string getTaskName(int taskIndex) {
             return tasks[taskIndex].name;
         }
-        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Task> lambda, string taskName) {
+        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, MemoryCache, Task> lambda, string taskName) {
             tasks.Add(new Statics.scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
@@ -64,8 +65,8 @@ namespace StarBot {
             await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
 
         }
-        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data) {
-            await tasks[taskIndex].lambda.Invoke(client, data);
+        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, MemoryCache cache) {
+            await tasks[taskIndex].lambda.Invoke(client, data, cache);
             await databaseUpdate(client, data);
         }
         public void logNextUp() {
@@ -81,12 +82,13 @@ namespace StarBot {
         }
         public async Task schedulerProcess(DiscordSocketClient client, Database data) {
             try {
+                MemoryCache cache = new();
                 while (true) {
                     findNextUp();
                     logNextUp();
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
                     for (int i = 0; i < nextUp.Count; i++) {
-                        await tasks[nextUp[i]].lambda.Invoke(client, data);
+                        await tasks[nextUp[i]].lambda.Invoke(client, data, cache);
                         Console.WriteLine($"Executed Task {getTaskName(i)}");
                     }
                     await databaseUpdate(client, data);

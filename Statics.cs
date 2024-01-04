@@ -31,9 +31,9 @@ namespace StarBot {
         }
         public struct scheduledTask {
             public CrontabSchedule schedule;
-            public Func<DiscordSocketClient, Database, Task> lambda;
+            public Func<DiscordSocketClient, Database, MemoryCache, Task> lambda;
             public string name;
-            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Task> lambda, string name) {
+            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, MemoryCache, Task> lambda, string name) {
                 this.schedule = schedule;
                 this.lambda = lambda;
                 this.name = name;
