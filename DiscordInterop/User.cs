@@ -1,6 +1,7 @@
 using Discord.WebSocket;
 
-class UserManager {
+namespace StarBot.DiscordInterop;
+internal class UserManager {
     public static bool userHasRole(DiscordSocketClient? client, ulong? guildID, ulong userID, ulong roleID) {
         if (guildID == null) {
             return false;

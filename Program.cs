@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using StarBot.Caching;
+using StarBot.DiscordInterop;
 
 namespace StarBot {
     internal class Program {
@@ -15,13 +16,11 @@ namespace StarBot {
         }
 
         private DiscordSocketClient? client;
-        //private HttpClient? web;
 
         public async Task MainAsync(string[] args) {
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
-            //web = new HttpClient();
             if (Config.DISCORD_NET_LOGGING) { // only handles the log event if logging is enabled
                 client.Log += Log;
             }
@@ -33,10 +32,7 @@ namespace StarBot {
                 Environment.Exit(1);
             }
 
-            await client.StartAsync();
-
-
-            // client initialization completed
+            await client.StartAsync(); // client initialization completed
 
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
