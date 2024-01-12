@@ -63,7 +63,7 @@ namespace StarBot {
         private static async Task MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel) {
             // If the message was not in the cache, downloading it will result in getting a copy of `after`.
             var message = await before.GetOrDownloadAsync();
-            Console.WriteLine($"{message} -> {after}");
+            //Console.WriteLine($"{message} -> {after}");
         }
         private async Task SlashCommandHandler(SocketSlashCommand command) {
             if (client == null) { return; }
