@@ -8,10 +8,6 @@ using Newtonsoft.Json.Linq;
 
 namespace StarBot {
     internal class Program {
-        //public bool debugMode = Config.DEBUG_MODE;
-        //private List<CrontabSchedule> scheduleList = new List<CrontabSchedule>();
-        //private List<Func<DiscordSocketClient, Database, Task>> scheduledLambdas = new List<Func<DiscordSocketClient, Database, Task>>();
-        //private List<int> nextUp = new List<int>();
         private Scheduler scheduler = new();
         private Database data = new();
         SocketGuild? guild;
@@ -19,20 +15,6 @@ namespace StarBot {
         private Task Log(Discord.LogMessage msg) {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
-        }
-
-        public static dynamic fetchJSON(string URL) {
-            var site = new Url(URL);
-            // headers and user agent spoofing are required to avoid a 403 'unauthorized' http error code
-            System.Threading.Tasks.Task<string> output = site.WithHeaders(new { Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8", User_Agent = "Mozilla/5.0" }).GetStringAsync();
-            output.Wait();
-            string outString = output.Result;
-            try {
-                return JObject.Parse(outString);
-
-            } catch (Newtonsoft.Json.JsonReaderException) {
-                return JArray.Parse(outString);
-            }
         }
 
         private DiscordSocketClient? client;
@@ -68,21 +50,13 @@ namespace StarBot {
                 var dbkeyremove = new SlashCommandBuilder();
                 var starbotInterest = new SlashCommandBuilder();
 
-
-                // Note: Names have to be all lowercase and match the regular expression ^[\w-]{3,32}$
                 dbkeymodify.WithName("key-modify");
-
-                // Descriptions can have a max length of 100.
                 dbkeymodify.WithDescription("Modify a key value pair in the database");
-
                 dbkeymodify.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to modify", isRequired: true);
                 dbkeymodify.AddOption("value", ApplicationCommandOptionType.String, "The value you would like to map the key to", isRequired: true);
 
                 dbkeyremove.WithName("key-remove");
-
-                // Descriptions can have a max length of 100.
                 dbkeyremove.WithDescription("Remove a key value pair in the database");
-
                 dbkeyremove.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to remove", isRequired: true);
 
                 starbotInterest.WithName("starbot-interest");
@@ -95,9 +69,6 @@ namespace StarBot {
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.Integer));
 
-
-
-
                 try {
                     // Now that we have our builder, we can call the CreateApplicationCommandAsync method to make our slash command.
                     await guild.DeleteApplicationCommandsAsync();
@@ -106,20 +77,15 @@ namespace StarBot {
                     await guild.CreateApplicationCommandAsync(starbotInterest.Build());
 
                 } catch (HttpException exception) {
-                    // If our command was invalid, we should catch an ApplicationCommandException. This exception contains the path of the error as well as the error message. You can serialize the Error field in the exception to get a visual of where your error is.
                     var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-
-                    // You can send this error somewhere or just print it to the console, for this example we're just going to print it.
-                    Console.WriteLine(json);
+                    var channel = client.GetChannel(1187007545357905980) as SocketTextChannel;
+                    await channel.SendMessageAsync($"Slash Command Initialization Error: \n{json}");
                 }
 
                 ready = true;
             };
             while (client.ConnectionState != ConnectionState.Connected && !ready) {
-                await Task.Delay(1000);
-            }
-            if (!ready) {
-                await Task.Delay(2000);
+                await Task.Delay(500);
             }
             if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
 

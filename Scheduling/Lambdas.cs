@@ -9,7 +9,7 @@ namespace StarBot {
         public static Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> XKCD_Automation = async (DiscordSocketClient client, Database data, Caching.MemoryCacheManager cache) => { // XKCD Automation
 
             string url = "https://xkcd.com/info.0.json";
-            JObject json = Program.fetchJSON(url);
+            JObject json = WebManager.FetchJSON(url);
             var channel = client.GetChannel(1106385489180758056) as SocketTextChannel;
 
             EmbedBuilder newEmbed = new() {
