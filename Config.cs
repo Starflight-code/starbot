@@ -9,6 +9,7 @@ namespace StarBot {
         // **** Server Specific (Hardcoded) Values ****
         public const ulong ADMIN_ROLE_ID = 696818216080769025;
         public const ulong STARBOT_INTEREST_ROLE_ID = 1143808465194713108;
+        public const ulong ERROR_LOG_CHANNEL = 1187007545357905980;
 
         // **** Logging/Debug Switches ****
         public const bool DEBUG_MODE = false; // reduces side effects by

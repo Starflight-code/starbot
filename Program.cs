@@ -78,7 +78,7 @@ namespace StarBot {
 
                 } catch (HttpException exception) {
                     var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-                    var channel = client.GetChannel(1187007545357905980) as SocketTextChannel;
+                    var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
                     await channel.SendMessageAsync($"Slash Command Initialization Error: \n{json}");
                 }
 
