@@ -3,11 +3,12 @@ using System.ComponentModel;
 using Newtonsoft.Json.Linq;
 using StarBot;
 
-class MemoryCache {
-    struct cachedObject<T> {
+namespace StarBot.Caching;
+public class MemoryCache {
+    struct CachedObject<T> {
         DateTime validUntil;
         public readonly T objectToStore;
-        public cachedObject(DateTime validUntil, T objectToStore) {
+        public CachedObject(DateTime validUntil, T objectToStore) {
             this.validUntil = validUntil;
             this.objectToStore = objectToStore;
         }
@@ -17,15 +18,14 @@ class MemoryCache {
         }
     };
 
-    Dictionary<string, cachedObject<dynamic>> cachedObjects = new();
+    Dictionary<string, CachedObject<dynamic>> cachedObjects = new();
 
-    string preProcessValue(string input) {
+    static string PreProcessValue(string input) {
         return input.Trim().ToLower();
     }
 
     public T? RequestFromCache<T>(string key) {
-        cachedObject<dynamic> fetchedObject;
-        if (!cachedObjects.TryGetValue(preProcessValue(key), out fetchedObject)) {
+        if (!cachedObjects.TryGetValue(PreProcessValue(key), out CachedObject<dynamic> fetchedObject)) {
             return default;
         }
 
@@ -39,10 +39,8 @@ class MemoryCache {
     public void AddToCache<T>(string key, DateTime validUntil, T data) {
         if (data == null) { return; }
         if (!Config.MEMORY_CACHE) { return; }
-        cachedObject<dynamic> cacheEntry = new(validUntil, data);
+        CachedObject<dynamic> cacheEntry = new(validUntil, data);
         cachedObjects.Remove(key);
         cachedObjects.Add(key, cacheEntry);
     }
-
-
 }

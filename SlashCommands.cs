@@ -71,7 +71,7 @@ namespace StarBot {
                 .Build());
 
         }
-        public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCache cache) {
+        public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cache) {
             await command.DeferAsync(ephemeral: true);
             if (!Statics.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
                 await command.FollowupAsync("You do not have the required permissions to execute this command.", ephemeral: true);
