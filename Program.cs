@@ -7,6 +7,7 @@ namespace StarBot {
     internal class Program {
         private Scheduler scheduler = new();
         private Database data = new();
+        private DiscordSocketClient? client;
         SocketGuild? guild;
         MemoryCacheManager cacheManager = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
@@ -15,7 +16,6 @@ namespace StarBot {
             return Task.CompletedTask;
         }
 
-        private DiscordSocketClient? client;
 
         public async Task MainAsync(string[] args) {
             bool ready = false;

@@ -6,14 +6,25 @@ using StarBot.Caching;
 
 namespace StarBot {
     internal class Scheduler {
-        List<Statics.scheduledTask> tasks = new();
+
+        public struct scheduledTask {
+            public CrontabSchedule schedule;
+            public Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> lambda;
+            public string name;
+            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> lambda, string name) {
+                this.schedule = schedule;
+                this.lambda = lambda;
+                this.name = name;
+            }
+        }
+        List<scheduledTask> tasks = new();
         List<int> nextUp = new();
 
         public string getTaskName(int taskIndex) {
             return tasks[taskIndex].name;
         }
         public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> lambda, string taskName) {
-            tasks.Add(new Statics.scheduledTask(schedule, lambda, taskName));
+            tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
             if (Config.DEBUG_MODE) {

@@ -5,15 +5,15 @@
             data = new DatabaseObject();
         }
         public string fetchValue(string key) {
-            key = Statics.preProcessValue(key);
+            key = Validation.preProcessValue(key);
             return data.get(key);
         }
         public void removeValue(string key) {
-            key = Statics.preProcessValue(key);
+            key = Validation.preProcessValue(key);
             data.remove(key);
         }
         public async Task iterateValue(string key, bool updateDB = false) {
-            key = Statics.preProcessValue(key);
+            key = Validation.preProcessValue(key);
             await initializeIterator(key);
             string value = fetchValue(key);
             int number;
@@ -35,8 +35,8 @@
         }
 
         public async Task setValue(string key, string value, bool updateDB = false) {
-            value = Statics.preProcessValue(value);
-            key = Statics.preProcessValue(key);
+            value = Validation.preProcessValue(value);
+            key = Validation.preProcessValue(key);
             data.add(key, value);
             if (updateDB) {
                 await data.updateSelf();
@@ -49,7 +49,7 @@
 
 
         public async Task initializeIterator(string key, int startingValue = 1, bool updateDB = false) {
-            key = Statics.preProcessValue(key);
+            key = Validation.preProcessValue(key);
             if (data.doesKeyExist(key)) {
                 return;
             } else {

@@ -2,6 +2,10 @@ using Newtonsoft.Json.Linq;
 using StarBot;
 
 static class Validation {
+
+    public static string preProcessValue(string value) {
+        return value.ToLower().Trim();
+    }
     public static bool IsLinkToImage(string link) {
         string[] extensions = {
             ".jpg",
