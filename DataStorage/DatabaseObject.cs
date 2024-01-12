@@ -40,11 +40,11 @@ namespace StarBot {
 
 
         public bool populateSelf() {
-            if (!File.Exists(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"))) {
+            if (!File.Exists(Compatiblity.buildPath(Directory.GetCurrentDirectory() + "\\database.db"))) {
                 return false;
             };
 
-            string dbString = File.ReadAllText(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"));
+            string dbString = File.ReadAllText(Compatiblity.buildPath(Directory.GetCurrentDirectory() + "\\database.db"));
             Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(dbString);
             if (db == null) {
                 return false;
@@ -73,7 +73,7 @@ namespace StarBot {
         }
         public async Task updateSelf() {
             string database = JsonConvert.SerializeObject(data);
-            await File.WriteAllTextAsync(Statics.buildPath(Directory.GetCurrentDirectory() + "\\database.db"), database);
+            await File.WriteAllTextAsync(Compatiblity.buildPath(Directory.GetCurrentDirectory() + "\\database.db"), database);
         }
 
         public string getSerializedSelf() {

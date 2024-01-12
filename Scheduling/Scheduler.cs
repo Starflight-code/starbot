@@ -2,6 +2,7 @@ using System.Net.Cache;
 using Discord;
 using Discord.WebSocket;
 using NCrontab;
+using StarBot.Caching;
 
 namespace StarBot {
     internal class Scheduler {
@@ -80,9 +81,8 @@ namespace StarBot {
             }
             Console.WriteLine("Queued Tasks: " + queued);
         }
-        public async Task schedulerProcess(DiscordSocketClient client, Database data) {
+        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager) {
             try {
-                Caching.MemoryCacheManager cacheManager = new();
                 while (true) {
                     findNextUp();
                     logNextUp();
