@@ -5,9 +5,7 @@ using Newtonsoft.Json;
 using StarBot;
 
 public static class Initialization {
-    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client) {
-
-        SocketGuild guild = client.GetGuild(696808297805774888);
+    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
         var starbotInterest = new SlashCommandBuilder();

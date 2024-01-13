@@ -12,12 +12,12 @@ namespace StarBot {
         public const ulong ERROR_LOG_CHANNEL = 1187007545357905980;
 
         // **** Logging/Debug Switches ****
-        public const bool DEBUG_MODE = false; // reduces side effects by
+        public const bool DEBUG_MODE = true; // reduces side effects by
         // preventing changes to Discord session sync
         // blocks lambda message send events
         public const bool DISCORD_NET_LOGGING = false;
 
-        public const string KEY = ""; // override key for debug mode, has no effect when DEBUG_MODE = false
+        public const string KEY = "NTkzMjczNzc1ODk4NzU1MDg0.GjkdpZ.BFqapLiVrxCZq3Rc0dN9lMvnd7CepYmvzcJPHU"; // override key for debug mode, has no effect when DEBUG_MODE = false
 
         // **** Production Settings ****
 

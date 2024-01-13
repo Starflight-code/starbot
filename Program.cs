@@ -36,10 +36,11 @@ namespace StarBot {
 
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
-                await Initialization.CreateSlashCommandsAsync(client);
+                this.guild = client.GetGuild(696808297805774888);
                 ready = true;
+                await Initialization.CreateSlashCommandsAsync(client, guild);
             };
-            while (client.ConnectionState != ConnectionState.Connected && !ready) {
+            while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
             if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
