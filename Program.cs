@@ -25,6 +25,7 @@ namespace StarBot {
                 client.Log += Log;
             }
             client.SlashCommandExecuted += SlashCommandHandler;
+            client.MessageCommandExecuted += MessageCommandHandler;
             if (args.Length > 0 || Config.DEBUG_MODE) {
                 await client.LoginAsync(TokenType.Bot, Config.DEBUG_MODE ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
@@ -49,7 +50,6 @@ namespace StarBot {
                 data.setSerializedDB(syncMessage);
                 await data.updateDB();
             }
-
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
@@ -80,6 +80,15 @@ namespace StarBot {
                     break;
                 case "execute-task":
                     await SlashCommands.executeTask(command, scheduler, client, data, cacheManager);
+                    break;
+            }
+        }
+
+        private async Task MessageCommandHandler(SocketMessageCommand command) {
+            if (client == null) { return; }
+            switch (command.CommandName) {
+                case "Report Message":
+                    await MessageCommands.UserReport(command, client, data);
                     break;
             }
         }

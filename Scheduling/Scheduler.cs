@@ -27,13 +27,13 @@ namespace StarBot {
             tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
+            nextUp.Clear();
             if (Config.DEBUG_MODE) {
                 for (int i = 0; i < tasks.Count; i++) {
                     nextUp.Add(i);
                 }
                 return;
             }
-            nextUp.Clear();
             int soonestIndex = 0;
             for (int i = 0; i < tasks.Count; i++) {
                 if (tasks[i].schedule.GetNextOccurrence(DateTime.Now) < tasks[soonestIndex].schedule.GetNextOccurrence(DateTime.Now)) {
@@ -62,6 +62,11 @@ namespace StarBot {
         }
 
         public async Task addInvokeCommand(SocketGuild? guild) {
+            var report = new MessageCommandBuilder();
+            report.WithName("Report Message");
+            report.WithDMPermission(false);
+            await guild.CreateApplicationCommandAsync(report.Build());
+
             var scheduledTaskInvoke = new SlashCommandBuilder();
             scheduledTaskInvoke.WithName("execute-task");
             scheduledTaskInvoke.WithDescription("Invoke a normally scheduled task manually");
