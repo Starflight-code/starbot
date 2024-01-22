@@ -3,12 +3,16 @@
 namespace StarBot {
     internal class Database {
         Dictionary<ulong, DatabaseObject> databases; // guildID will find associated DatabaseObject
-        DatabaseObject data;
+        //DatabaseObject data;
+        public List<ulong> guilds;
         public Database(DiscordSocketClient client) {
-            data = new DatabaseObject(696808297805774888);
+            //data = new DatabaseObject(696808297805774888);
             databases = new();
+            guilds = new();
+            Directory.CreateDirectory(Config.DATABASE_DIRECTORY);
             foreach (SocketGuild guild in client.Guilds) {
                 ulong guildID = guild.Id;
+                guilds.Add(guildID);
                 databases.Add(guildID, new DatabaseObject(guildID));
             }
         }
@@ -40,20 +44,22 @@ namespace StarBot {
                 return;
                 //throw e;
             }
+            databases.TryGetValue(guildID, out DatabaseObject? data);
             data.add(key, (++number).ToString());
             if (updateDB) {
                 await data.updateSelf(guildID);
             }
         }
 
-        public async Task setValue(string key, string value, ulong guildID, bool updateDB = false) {
+        public async Task setValue(string key, string value, ulong? guildID, bool updateDB = false) {
+            if (guildID == null) { return; }
             value = Validation.preProcessValue(value);
             key = Validation.preProcessValue(key);
-            databases.TryGetValue(guildID, out DatabaseObject? targetDatabase);
+            databases.TryGetValue((ulong)guildID, out DatabaseObject? targetDatabase);
             if (targetDatabase == null) { return; }
             targetDatabase.add(key, value);
             if (updateDB) {
-                await targetDatabase.updateSelf(guildID);
+                await targetDatabase.updateSelf((ulong)guildID);
             }
         }
 

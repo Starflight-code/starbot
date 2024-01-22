@@ -8,7 +8,6 @@ namespace StarBot {
         private Scheduler scheduler = new();
         private DiscordSocketClient? client;
         private Database? data;
-        SocketGuild? guild;
         MemoryCacheManager cacheManager = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
@@ -37,10 +36,11 @@ namespace StarBot {
 
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
-                this.guild = client.GetGuild(696808297805774888);
-                ready = true;
-                await Initialization.CreateSlashCommandsAsync(client, guild);
                 data = new(client);
+                for (int i = 0; i < data.guilds.Count(); i++) {
+                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]));
+                }
+                ready = true;
             };
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
@@ -57,7 +57,10 @@ namespace StarBot {
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AniMemesDaily_Automation, "Animemes Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.QuestionOfTheDay_Automation, "Question of the Day Automation");
 
-            await scheduler.addInvokeCommand(guild);
+            for (int i = 0; i < data.guilds.Count(); i++) {
+                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]));
+            }
+
             if (data == null) { return; }
             await scheduler.schedulerProcess(client, data, cacheManager);
             await Task.Delay(-1);
@@ -78,9 +81,9 @@ namespace StarBot {
                 case "key-remove":
                     await SlashCommands.keyRemove(command, client, data);
                     break;
-                /*case "starbot-interest":
-                    await SlashCommands.starbotInterest(command, client);
-                    break;*/
+                case "setup-channel":
+                    await SlashCommands.setupChannels(command, client, data);
+                    break;
                 case "execute-task":
                     await SlashCommands.executeTask(command, scheduler, client, data, cacheManager);
                     break;

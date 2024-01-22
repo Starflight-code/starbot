@@ -99,9 +99,20 @@ internal class SlashCommands {
         var commandArgs = command.Data.Options.ToArray();
         int taskIndex = unchecked((int)(Int64)commandArgs[0].Value);
 
-#pragma warning disable CS8604 // Possible null reference argument. (already handled in the beginning but this warning triggers anyway)
         await data.setValue(Config.TASK_NAMES[taskIndex] + " Channel", command.ChannelId.ToString(), (ulong)command.GuildId, true);
-#pragma warning restore CS8604 // Possible null reference argument.
-        await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
+        await command.FollowupAsync($"Current channel linked with \"{scheduler.getTaskName(taskIndex)}\".", ephemeral: true);
+    }
+
+    public static async Task setupChannels(SocketSlashCommand command, DiscordSocketClient client, Database data) {
+        await command.DeferAsync(ephemeral: true);
+        var commandArgs = command.Data.Options.ToArray();
+        int argument = unchecked((int)(Int64)commandArgs[0].Value);
+
+        switch (argument) {
+            case 0: // Report Channel
+                await data.setValue("Report Channel", command.ChannelId.ToString(), command.GuildId, true);
+                command.FollowupAsync("Associated current channel with report system.");
+                break;
+        }
     }
 }

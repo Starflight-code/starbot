@@ -35,7 +35,7 @@ namespace StarBot {
 
             string url = "https://www.reddit.com/r/cat/.json?limit=100&t=day";
 
-            await data.initializeIterator("CatNumber", 1);
+            await data.initializeIterator("CatNumber", guildID, 1);
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("Cat Channel", guildID))) as SocketTextChannel;
 
@@ -69,7 +69,7 @@ namespace StarBot {
             string url = "https://www.reddit.com/r/awwnime/.json?limit=100&t=day";
 
             JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastanimeIDs", guildID), cache);
-            await data.initializeIterator("AnimeNumber", 1);
+            await data.initializeIterator("AnimeNumber", guildID, 1);
             await data.setValue("lastAnimeIDs", WebManager.AddNewPostID(data.fetchValue("lastanimeIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("Anime Channel", guildID))) as SocketTextChannel;
@@ -98,7 +98,7 @@ namespace StarBot {
 
             string url = "https://www.reddit.com/r/AskReddit/.json?limit=100&t=day";
             JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastQuestionOfTheDayIDs", guildID), cache, false);
-            await data.initializeIterator("QuestionNumber", 1);
+            await data.initializeIterator("QuestionNumber", guildID, 1);
             await data.setValue("lastQuestionOfTheDayIDs", WebManager.AddNewPostID(data.fetchValue("lastQuestionOfTheDayIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("QOTD Channel", guildID))) as SocketTextChannel;
@@ -127,7 +127,7 @@ namespace StarBot {
 
             string url = "https://www.reddit.com/r/animemes/.json?limit=100&t=day";
             JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastAnimemesIDs", guildID), cache);
-            await data.initializeIterator("AnimemesNumber", 1);
+            await data.initializeIterator("AnimemesNumber", guildID, 1);
             await data.setValue("lastAnimemesIDs", WebManager.AddNewPostID(data.fetchValue("lastAnimemesIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("AniMemes Channel", guildID))) as SocketTextChannel;

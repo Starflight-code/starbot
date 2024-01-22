@@ -63,11 +63,13 @@ namespace StarBot {
 
         public async Task addInvokeCommand(SocketGuild? guild) {
             var report = new MessageCommandBuilder();
+            var scheduledTaskInvoke = new SlashCommandBuilder();
+            var scheduledTaskSetup = new SlashCommandBuilder();
+
+
             report.WithName("Report Message");
             report.WithDMPermission(false);
-            await guild.CreateApplicationCommandAsync(report.Build());
 
-            var scheduledTaskInvoke = new SlashCommandBuilder();
             scheduledTaskInvoke.WithName("execute-task");
             scheduledTaskInvoke.WithDescription("Invoke a normally scheduled task manually");
             var builder = new SlashCommandOptionBuilder()
@@ -79,9 +81,7 @@ namespace StarBot {
                 builder.AddChoice(tasks[i].name, i);
             }
             scheduledTaskInvoke.AddOption(builder);
-            await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
 
-            var scheduledTaskSetup = new SlashCommandBuilder();
             scheduledTaskSetup.WithName("set-task-channel");
             scheduledTaskSetup.WithDescription("Set the channel for a scheduled task to run in.");
             var setupBuilder = new SlashCommandOptionBuilder()
@@ -92,13 +92,19 @@ namespace StarBot {
             for (int i = 0; i < tasks.Count; i++) {
                 setupBuilder.AddChoice(tasks[i].name, i);
             }
-            scheduledTaskSetup.AddOption(builder);
-            await guild.CreateApplicationCommandAsync(setupBuilder.Build());
+            scheduledTaskSetup.AddOption(setupBuilder);
 
+            await guild.CreateApplicationCommandAsync(report.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);
             await databaseUpdate(client, data, guildID);
+        }
+
+        public void returnTaskDbName(int taskIndex) {
+
         }
         public void logNextUp() {
             Console.WriteLine("Waiting until " + waitTimeReadable());
