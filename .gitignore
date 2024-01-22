@@ -400,3 +400,4 @@ FodyWeavers.xsd
 # Project Specific
 #Config.cs
 *.db
+guilds/*

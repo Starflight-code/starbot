@@ -27,13 +27,18 @@ internal class MessageCommands {
             attachmentSummary = "";
             for (int i = 0; i < attached.Count; i++) {
                 if (i != 0) { attachmentSummary += "\n"; }
-                attachmentSummary += " - " + attached[i].Filename;
+                attachmentSummary += "- " + attached[i].Filename;
             }
             if (0 < attached.Count && 0 < embeds.Count) {
-                attachmentSummary += "\n - " + embeds.Count + " embed(s)";
+                attachmentSummary += "\n- " + embeds.Count + " embed(s)";
             } else if (attached.Count == 0 && 0 < embeds.Count) {
-                attachmentSummary += " - " + embeds.Count + " embed(s)";
+                attachmentSummary += "- " + embeds.Count + " embed(s)";
             }
+        }
+
+        string attachedURLs = "";
+        for (int i = 0; i < attached.Count; i++) { // adds the addToEmbed field
+            attachedURLs += attached[i].ProxyUrl + " ";
         }
 
         // ** Report Log Embed Fields **
@@ -88,7 +93,7 @@ internal class MessageCommands {
             Fields = new List<EmbedFieldBuilder> { reported, reporter, reportedMessageLink, reportedMessageID, messageSentAt, reportReceivedAt, attachments }
         };
 
-        var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync("", embed: reportEmbed.Build());
+        var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(embed: reportEmbed.Build());
 
         var addToEmbed = new EmbedFieldBuilder { // embed field added to reported message attachment/embed echo
             Name = "Attached to Report",
@@ -96,18 +101,15 @@ internal class MessageCommands {
             IsInline = false
         };
 
-        for (int i = 0; i < embeds.Count; i++) { // adds the addToEmbed field
-            embeds[i] = embeds[i].ToEmbedBuilder().AddField(addToEmbed).Build();
-        }
-
         if (attached.Count != 0 || embeds.Count != 0) {
             for (int i = 0; i < embeds.Count; i++) { // echos report message embeds in the log channel
                 await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(embed: embeds[i]);
             }
-            for (int i = 0; i < attached.Count; i++) { // echos report message attachments in the log channel
-                await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(attached[i].ProxyUrl);
-            }
+            //for (int i = 0; i < attached.Count; i++) { // echos report message attachments in the log channel
+            await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(message.GetJumpUrl() + " - " + attachedURLs);
+            //}
         }
+
 
 
         await command.FollowupAsync(ephemeral: true, embed: new EmbedBuilder {

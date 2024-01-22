@@ -6,8 +6,8 @@ using StarBot.DiscordInterop;
 namespace StarBot {
     internal class Program {
         private Scheduler scheduler = new();
-        private Database data = new();
         private DiscordSocketClient? client;
+        private Database? data;
         SocketGuild? guild;
         MemoryCacheManager cacheManager = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
@@ -40,16 +40,17 @@ namespace StarBot {
                 this.guild = client.GetGuild(696808297805774888);
                 ready = true;
                 await Initialization.CreateSlashCommandsAsync(client, guild);
+                data = new(client);
             };
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
-            if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
-                string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
+            //if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
+            //    string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
 
-                data.setSerializedDB(syncMessage);
-                await data.updateDB();
-            }
+            //    data.setSerializedDB(syncMessage);
+            //await data.updateDB();
+            //}
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
@@ -57,6 +58,7 @@ namespace StarBot {
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.QuestionOfTheDay_Automation, "Question of the Day Automation");
 
             await scheduler.addInvokeCommand(guild);
+            if (data == null) { return; }
             await scheduler.schedulerProcess(client, data, cacheManager);
             await Task.Delay(-1);
         }
@@ -67,7 +69,8 @@ namespace StarBot {
             //Console.WriteLine($"{message} -> {after}");
         }
         private async Task SlashCommandHandler(SocketSlashCommand command) {
-            if (client == null) { return; }
+            if (client == null || data == null) { return; }
+            if (command.IsDMInteraction) { await command.RespondAsync("This command can not be used in a DM."); return; }
             switch (command.CommandName) {
                 case "key-modify":
                     await SlashCommands.keySet(command, client, data);
@@ -75,18 +78,21 @@ namespace StarBot {
                 case "key-remove":
                     await SlashCommands.keyRemove(command, client, data);
                     break;
-                case "starbot-interest":
+                /*case "starbot-interest":
                     await SlashCommands.starbotInterest(command, client);
-                    break;
+                    break;*/
                 case "execute-task":
                     await SlashCommands.executeTask(command, scheduler, client, data, cacheManager);
+                    break;
+                case "set-task-channel":
+                    await SlashCommands.setUpTask(command, scheduler, client, data, cacheManager);
                     break;
             }
         }
 
         private async Task MessageCommandHandler(SocketMessageCommand command) {
-            if (client == null) {
-                await command.RespondAsync("A catastrophic error has been detected. This command will not be executed! (DiscordSocketClient object is null)", ephemeral: true);
+            if (client == null || data == null) {
+                await command.RespondAsync("A catastrophic error has been detected. This command will not be executed! (DiscordSocketClient object or Database is null)", ephemeral: true);
                 return;
             }
             switch (command.CommandName) {

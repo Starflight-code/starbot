@@ -7,8 +7,8 @@ namespace StarBot {
         public const int HOURS_TO_CACHE = 24; // number of hours to maintain caches before re-fetching
 
         // **** Server Specific (Hardcoded) Values ****
-        public const ulong ADMIN_ROLE_ID = 696818216080769025;
-        public const ulong STARBOT_INTEREST_ROLE_ID = 1143808465194713108;
+        //public const ulong ADMIN_ROLE_ID = 696818216080769025;
+        //public const ulong STARBOT_INTEREST_ROLE_ID = 1143808465194713108;
         public const ulong ERROR_LOG_CHANNEL = 1187007545357905980;
         public const ulong REPORT_LOG_CHANNEL = 1198719571037802586;
 
@@ -28,5 +28,15 @@ namespace StarBot {
             ".png",
             ".gif"
         };
+
+        public static string[] TASK_NAMES = { // extensions to mark as images (can be decoded by Discord)
+            "XKCD",
+            "Cat",
+            "Anime",
+            "AniMemes",
+            "QOTD"
+        };
+
+        public static string DATABASE_DIRECTORY = Compatiblity.buildPath(Directory.GetCurrentDirectory() + "/guilds/");
     }
 }

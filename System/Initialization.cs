@@ -19,7 +19,7 @@ public static class Initialization {
         dbkeyremove.WithDescription("Remove a key value pair in the database");
         dbkeyremove.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to remove", isRequired: true);
 
-        starbotInterest.WithName("starbot-interest");
+        /*starbotInterest.WithName("starbot-interest");
         starbotInterest.WithDescription("Are you interesting in seeing notes from our developer and some inner workings of StarBot?");
         starbotInterest.AddOption(new SlashCommandOptionBuilder()
             .WithName("interested")
@@ -27,7 +27,7 @@ public static class Initialization {
             .AddChoice("Yes", 1)
             .AddChoice("No", 0)
             .WithRequired(true)
-            .WithType(ApplicationCommandOptionType.Integer));
+            .WithType(ApplicationCommandOptionType.Integer));*/
 
         try {
             // Now that we have our builder, we can call the CreateApplicationCommandAsync method to make our slash command.

@@ -5,8 +5,9 @@ using StarBot.Caching;
 namespace StarBot.DiscordInterop;
 internal class SlashCommands {
     public static async Task keySet(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+        if (command.GuildId == null) { return; }
 
-        if (UserManager.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
+        if (UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
             var commandArgs = command.Data.Options.ToArray();
             string? key = commandArgs[0].Value.ToString();
             string? value = commandArgs[1].Value.ToString();
@@ -14,14 +15,15 @@ internal class SlashCommands {
                 await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                 return;
             }
-            await data.setValue(key, value);
+            await data.setValue(key, value, (ulong)command.GuildId);
             await command.RespondAsync("Changes applied: " + key + " -> " + value + "\nKey Value pair mapping completed. Changes will sync immediately.", ephemeral: true);
-            await data.updateDB();
-            await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
+            await data.updateDB((ulong)command.GuildId);
+            await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB((ulong)command.GuildId); });
         }
     }
     public static async Task keyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
-        if (!UserManager.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
+        if (command.GuildId == null) { return; }
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
             return;
         } // permission check
 
@@ -32,12 +34,13 @@ internal class SlashCommands {
             return;
         }
 
-        data.removeValue(key);
+        data.removeValue(key, (ulong)command.GuildId);
         await command.RespondAsync("Changes applied: \"" + key + "\" - REMOVED" + "\nChanges will sync immediately.", ephemeral: true);
-        await data.updateDB();
-        await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
+        await data.updateDB((ulong)command.GuildId);
+        await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB((ulong)command.GuildId); });
     }
-    public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client) {
+    /*public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client) {
+        if (command.GuildId == null) { return; }
         var commandArgs = command.Data.Options.ToArray();
         long interested = (long)commandArgs[0].Value;
         if (command.GuildId == null) {
@@ -46,7 +49,7 @@ internal class SlashCommands {
         }
         string uiStatus = "";
         if (interested == 1) {
-            if (!UserManager.userHasRole(client, command.GuildId, command.User.Id, Config.STARBOT_INTEREST_ROLE_ID)) {
+            if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
                 uiStatus = "APPROVED";
                 await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(Config.STARBOT_INTEREST_ROLE_ID);
                 await command.RespondAsync($"Your interest in StarBot is appreciated. Your access to backend channels was **{uiStatus}**.\nThis action has been logged. Access to these channels may be revoked at any time for any reason.", ephemeral: true);
@@ -55,7 +58,7 @@ internal class SlashCommands {
                 return;
             }
         } else {
-            if (UserManager.userHasRole(client, command.GuildId, command.User.Id, Config.STARBOT_INTEREST_ROLE_ID)) {
+            if (UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
                 uiStatus = "REMOVED";
                 await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(Config.STARBOT_INTEREST_ROLE_ID);
                 await command.RespondAsync($"Your access to backend channels was **{uiStatus}**.\nThis action has been logged.", ephemeral: true);
@@ -71,17 +74,34 @@ internal class SlashCommands {
             .WithDescription($"Username: {command.User.Username}\nStatus: {uiStatus}\nScope:\n- #devlog\n- #autosync-backend")
             .Build());
 
-    }
+    }*/
     public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
+        if (command.GuildId == null) { return; }
         await command.DeferAsync(ephemeral: true);
-        if (!UserManager.userHasRole(client, command.GuildId, command.User.Id, Config.ADMIN_ROLE_ID)) {
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
             await command.FollowupAsync("You do not have the required permissions to execute this command.", ephemeral: true);
             return;
         }
         var commandArgs = command.Data.Options.ToArray();
         int taskIndex = unchecked((int)(Int64)commandArgs[0].Value);
 
-        await scheduler.invokeTask(taskIndex, client, data, cache);
+        await scheduler.invokeTask(taskIndex, client, data, cache, (ulong)command.GuildId);
+        await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
+    }
+
+    public static async Task setUpTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
+        if (command.GuildId == null || command.ChannelId == null) { return; }
+        await command.DeferAsync(ephemeral: true);
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+            await command.FollowupAsync("You do not have the required permissions to execute this command.", ephemeral: true);
+            return;
+        }
+        var commandArgs = command.Data.Options.ToArray();
+        int taskIndex = unchecked((int)(Int64)commandArgs[0].Value);
+
+#pragma warning disable CS8604 // Possible null reference argument. (already handled in the beginning but this warning triggers anyway)
+        await data.setValue(Config.TASK_NAMES[taskIndex] + " Channel", command.ChannelId.ToString(), (ulong)command.GuildId, true);
+#pragma warning restore CS8604 // Possible null reference argument.
         await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
     }
 }
