@@ -116,8 +116,12 @@ internal class MessageCommands {
 
         if (attached.Count != 0 || embeds.Count != 0) {
             for (int i = 0; i < embeds.Count; i++) { // echos report message embeds in the log channel
-                embeds[i] = embeds[i].ToEmbedBuilder().AddField(addToEmbed).Build();
-                await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: embeds[i]);
+                if (embeds[i].Url.Contains("tenor")) {
+                    await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embeds[i].Video.ToString());
+                } else {
+                    embeds[i] = embeds[i].ToEmbedBuilder().AddField(addToEmbed).Build();
+                    await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: embeds[i]);
+                }
             }
             //for (int i = 0; i < attached.Count; i++) { // echos report message attachments in the log channel
             if (0 < attached.Count) {
