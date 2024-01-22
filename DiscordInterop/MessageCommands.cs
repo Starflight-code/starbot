@@ -11,6 +11,7 @@ internal class MessageCommands {
             await command.RespondAsync("This command can not be executed in the current enviroment. (In DM Channel or GuildID is null)", ephemeral: true);
             return;
         }
+        await command.DeferAsync(ephemeral: true);
 
         var reportedMessage = command.Data.Message;
         var content = reportedMessage.CleanContent.Trim() == "" ? "<No Content>" : reportedMessage.CleanContent.Trim();
@@ -47,6 +48,30 @@ internal class MessageCommands {
             IsInline = true
         };
 
+        var reportedMessageLink = new EmbedFieldBuilder {
+            Name = "Message Link",
+            Value = reportedMessage.GetJumpUrl(),
+            IsInline = false
+        };
+
+        var reportedMessageID = new EmbedFieldBuilder {
+            Name = "Message ID",
+            Value = reportedMessage.Id,
+            IsInline = true
+        };
+
+        var messageSentAt = new EmbedFieldBuilder {
+            Name = "Message Sent",
+            Value = TimestampTag.FromDateTimeOffset(reportedMessage.CreatedAt, style: TimestampTagStyles.ShortDateTime).ToString(),
+            IsInline = true
+        };
+
+        var reportReceivedAt = new EmbedFieldBuilder {
+            Name = "Report Received",
+            Value = TimestampTag.FromDateTimeOffset(command.CreatedAt, style: TimestampTagStyles.ShortDateTime).ToString(),
+            IsInline = true
+        };
+
         var attachments = new EmbedFieldBuilder {
             Name = "Attachments",
             Value = attachmentSummary,
@@ -56,17 +81,19 @@ internal class MessageCommands {
         var reportEmbed = new EmbedBuilder {
             Title = "Message Report",
             Color = Color.DarkRed,
-            Description = content + $"\n{reportedMessage.GetJumpUrl()} | ID: {reportedMessage.Id}",
+            Description = content,
             ThumbnailUrl = reportedMessage.Author.GetAvatarUrl(),
-            Fields = new List<EmbedFieldBuilder> { reported, reporter, attachments }
+            Fields = new List<EmbedFieldBuilder> { reported, reporter, reportedMessageLink, reportedMessageID, messageSentAt, reportReceivedAt, attachments }
         };
 
         var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync("", embed: reportEmbed.Build());
+
         var addToEmbed = new EmbedFieldBuilder {
             Name = "Attached to Report",
             Value = message.GetJumpUrl(),
             IsInline = false
         };
+
         for (int i = 0; i < embeds.Count; i++) {
             embeds[i] = embeds[i].ToEmbedBuilder().AddField(addToEmbed).Build();
         }
@@ -78,6 +105,18 @@ internal class MessageCommands {
                 await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(embed: embeds[i]);
             }
         }
-        await command.RespondAsync("We've recieved your report, and it will be reviewed by our moderation team.", ephemeral: true);
+
+
+        await command.FollowupAsync(ephemeral: true, embed: new EmbedBuilder {
+            Color = Color.Blue,
+            Title = "Report Received",
+            Description = "We've received your report, and we're looking into it on our side. This report contains a few bits of information, such as: " +
+            "\n- Your Account Identity" +
+            "\n- The Reported User's Account Identity" +
+            "\n- Message Content" +
+            "\n- Message Attachments" +
+            "\n- Associated Timestamps" +
+            "\n**Thanks for making " + client.GetGuild((ulong)command.GuildId).Name + " a safer place!**"
+        }.Build());
     }
 }
