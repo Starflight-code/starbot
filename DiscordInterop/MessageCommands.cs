@@ -7,7 +7,7 @@ namespace StarBot.DiscordInterop;
 
 internal class MessageCommands {
     public static async Task UserReport(SocketMessageCommand command, DiscordSocketClient? client, Database data) {
-        if (command.IsDMInteraction || command.GuildId == null) {
+        if (command.IsDMInteraction || command.GuildId == null) { // in DM channel or erroneous enviroment (not sure why else GuildId would be null)
             await command.RespondAsync("This command can not be executed in the current enviroment. (In DM Channel or GuildID is null)", ephemeral: true);
             return;
         }
@@ -21,7 +21,7 @@ internal class MessageCommands {
 
         string attachmentSummary;
 
-        if (attached.Count == 0 && embeds.Count == 0) {
+        if (attached.Count == 0 && embeds.Count == 0) { // creates a summary of attached files/embeds for the log
             attachmentSummary = "None";
         } else {
             attachmentSummary = "";
@@ -35,6 +35,8 @@ internal class MessageCommands {
                 attachmentSummary += " - " + embeds.Count + " embed(s)";
             }
         }
+
+        // ** Report Log Embed Fields **
 
         var reported = new EmbedFieldBuilder {
             Name = "Reported",
@@ -88,21 +90,22 @@ internal class MessageCommands {
 
         var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync("", embed: reportEmbed.Build());
 
-        var addToEmbed = new EmbedFieldBuilder {
+        var addToEmbed = new EmbedFieldBuilder { // embed field added to reported message attachment/embed echo
             Name = "Attached to Report",
             Value = message.GetJumpUrl(),
             IsInline = false
         };
 
-        for (int i = 0; i < embeds.Count; i++) {
+        for (int i = 0; i < embeds.Count; i++) { // adds the addToEmbed field
             embeds[i] = embeds[i].ToEmbedBuilder().AddField(addToEmbed).Build();
         }
+
         if (attached.Count != 0 || embeds.Count != 0) {
-            for (int i = 0; i < attached.Count; i++) {
-                await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(attached[i].ProxyUrl);
-            }
-            for (int i = 0; i < embeds.Count; i++) {
+            for (int i = 0; i < embeds.Count; i++) { // echos report message embeds in the log channel
                 await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(embed: embeds[i]);
+            }
+            for (int i = 0; i < attached.Count; i++) { // echos report message attachments in the log channel
+                await (client.GetGuild((ulong)command.GuildId).GetChannel(Config.REPORT_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync(attached[i].ProxyUrl);
             }
         }
 
@@ -110,11 +113,11 @@ internal class MessageCommands {
         await command.FollowupAsync(ephemeral: true, embed: new EmbedBuilder {
             Color = Color.Blue,
             Title = "Report Received",
-            Description = "We've received your report, and we're looking into it on our side. This report contains a few bits of information, such as: " +
+            Description = "We've received your report, and we're looking into it on our side. This report contains a bit of information, such as: " +
             "\n- Your Account Identity" +
             "\n- The Reported User's Account Identity" +
             "\n- Message Content" +
-            "\n- Message Attachments" +
+            "\n- Message Attachments/Embeds" +
             "\n- Associated Timestamps" +
             "\n**Thanks for making " + client.GetGuild((ulong)command.GuildId).Name + " a safer place!**"
         }.Build());

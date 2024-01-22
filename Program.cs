@@ -85,7 +85,10 @@ namespace StarBot {
         }
 
         private async Task MessageCommandHandler(SocketMessageCommand command) {
-            if (client == null) { return; }
+            if (client == null) {
+                await command.RespondAsync("A catastrophic error has been detected. This command will not be executed! (DiscordSocketClient object is null)", ephemeral: true);
+                return;
+            }
             switch (command.CommandName) {
                 case "Report Message":
                     await MessageCommands.UserReport(command, client, data);
