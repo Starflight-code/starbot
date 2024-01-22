@@ -13,6 +13,11 @@ namespace StarBot {
             JObject json = WebManager.FetchJSON(url);
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("XKCD Channel", guildID))) as SocketTextChannel;
 
+            if (channel == null) {
+                await data.setValue("XKCD Channel", "", guildID, true);
+                return;
+            }
+
             EmbedBuilder newEmbed = new() {
                 Title = json["safe_title"] + " - " + json["num"],
                 Description = json["alt"].ToString(),
@@ -33,6 +38,11 @@ namespace StarBot {
             await data.initializeIterator("CatNumber", 1);
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("Cat Channel", guildID))) as SocketTextChannel;
+
+            if (channel == null) {
+                await data.setValue("Cat Channel", "", guildID, true);
+                return;
+            }
 
             JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastCatIDs", guildID), cache);
 
@@ -64,6 +74,11 @@ namespace StarBot {
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("Anime Channel", guildID))) as SocketTextChannel;
 
+            if (channel == null) {
+                await data.setValue("Anime Channel", "", guildID, true);
+                return;
+            }
+
             EmbedBuilder newEmbed = new() {
                 Title = "Anime Image #" + data.fetchValue("AnimeNumber", guildID),
                 Description = post["title"] +
@@ -88,6 +103,11 @@ namespace StarBot {
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("QOTD Channel", guildID))) as SocketTextChannel;
 
+            if (channel == null) {
+                await data.setValue("QOTD Channel", "", guildID, true);
+                return;
+            }
+
             EmbedBuilder newEmbed = new() {
                 Title = $"Question of the Day #{data.fetchValue("QuestionNumber", guildID)}",
                 Description = post["title"] +
@@ -111,6 +131,11 @@ namespace StarBot {
             await data.setValue("lastAnimemesIDs", WebManager.AddNewPostID(data.fetchValue("lastAnimemesIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
             var channel = client.GetChannel(ulong.Parse(data.fetchValue("AniMemes Channel", guildID))) as SocketTextChannel;
+
+            if (channel == null) {
+                await data.setValue("AniMemes Channel", "", guildID, true);
+                return;
+            }
 
             EmbedBuilder newEmbed = new() {
                 Title = "Anime Meme #" + data.fetchValue("AnimemesNumber", guildID),
