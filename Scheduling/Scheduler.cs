@@ -106,7 +106,7 @@ namespace StarBot {
         public void returnTaskDbName(int taskIndex) {
 
         }
-        public void logNextUp() {
+        public void logNextUp(DiscordSocketClient client) {
             Console.WriteLine("Waiting until " + waitTimeReadable());
             string queued = "";
             for (int j = 0; j < nextUp.Count; j++) {
@@ -120,9 +120,13 @@ namespace StarBot {
         public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager) {
             try {
                 while (true) {
+                    Random random = new();
+                    int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
+                    await client.SetGameAsync(Config.STATUS_MESSAGES[indexOfNextStatus].message, type: Config.STATUS_MESSAGES[indexOfNextStatus].activity);
                     findNextUp();
-                    logNextUp();
+                    logNextUp(client);
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
+                    await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
                     for (int i = 0; i < nextUp.Count; i++) {
 
                         foreach (SocketGuild guild in client.Guilds) {

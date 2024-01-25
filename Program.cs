@@ -26,7 +26,7 @@ namespace StarBot {
             client.SlashCommandExecuted += SlashCommandHandler;
             client.MessageCommandExecuted += MessageCommandHandler;
             if (args.Length > 0 || Config.DEBUG_MODE) {
-                await client.LoginAsync(TokenType.Bot, Config.DEBUG_MODE ? Config.KEY : args[0]); // uses Config key in debug mode
+                await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
                 Console.WriteLine("You have not specified a key and this binary is not in debug mode.");
                 Environment.Exit(1);

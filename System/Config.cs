@@ -1,16 +1,22 @@
 namespace StarBot {
     internal static class Config {
 
+        public struct StatusMessage {
+            public string message;
+            public Discord.ActivityType activity;
+            public StatusMessage(string message, Discord.ActivityType activity) {
+                this.message = message;
+                this.activity = activity;
+            }
+        }
+
         // **** Caching and Optimization ****
         public const bool MEMORY_CACHE = true; // enables the JSON cache for Reddit fetching
         public const int POSTS_TO_CACHE = 5; // number of posts to look back on and make sure there aren't any duplicates
         public const int HOURS_TO_CACHE = 24; // number of hours to maintain caches before re-fetching
 
         // **** Server Specific (Hardcoded) Values ****
-        //public const ulong ADMIN_ROLE_ID = 696818216080769025;
-        //public const ulong STARBOT_INTEREST_ROLE_ID = 1143808465194713108;
-        public const ulong ERROR_LOG_CHANNEL = 1187007545357905980;
-        //public const ulong REPORT_LOG_CHANNEL = 1198719571037802586;
+        public const ulong ERROR_LOG_CHANNEL = 1187007545357905980; // this links to StarBot's error channel. (change this before deploying to another enviroment)
 
         // **** Logging/Debug Switches ****
         public const bool DEBUG_MODE = false; // reduces side effects by
@@ -18,7 +24,7 @@ namespace StarBot {
         // blocks lambda message send events
         public const bool DISCORD_NET_LOGGING = false;
 
-        public const string KEY = ""; // override key for debug mode, has no effect when DEBUG_MODE = false
+        public const string KEY = ""; // override key, if specified the argument given will be ignored
 
         // **** Production Settings ****
 
@@ -29,12 +35,20 @@ namespace StarBot {
             ".gif"
         };
 
-        public static string[] TASK_NAMES = { // extensions to mark as images (can be decoded by Discord)
+        public static string[] TASK_NAMES = { // names of tasks, used to generate task keys for the database
             "XKCD",
             "Cat",
             "Anime",
             "AniMemes",
             "QOTD"
+        };
+
+        public static StatusMessage[] STATUS_MESSAGES = { // extensions to mark as images (can be decoded by Discord)
+            new("the sun rise, and seeing all the horizons just beyond view.", Discord.ActivityType.Watching),
+            new("for intriguing, high quality content for your server.", Discord.ActivityType.Watching),
+            new("urgent reports and keeping your server clean.", Discord.ActivityType.Listening),
+            new("days pass by. Wondering if the constant passage of time will pause for even a brief break.", Discord.ActivityType.Watching),
+            new("feedback and growing into a better bot.", Discord.ActivityType.Listening)
         };
 
         public static string DATABASE_DIRECTORY = Compatiblity.buildPath(Directory.GetCurrentDirectory() + "/guilds/");
