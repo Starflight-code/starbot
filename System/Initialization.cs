@@ -29,11 +29,14 @@ public static class Initialization {
             .WithType(ApplicationCommandOptionType.Integer));
 
         try {
-            // Now that we have our builder, we can call the CreateApplicationCommandAsync method to make our slash command.
-            await guild.DeleteApplicationCommandsAsync();
-            await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
-            await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
-            await guild.CreateApplicationCommandAsync(setupChannels.Build());
+            await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
+                dbkeymodify.Build(),
+                dbkeyremove.Build(),
+                setupChannels.Build()
+            });
+            //await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
+            //await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
+            //await guild.CreateApplicationCommandAsync(setupChannels.Build());
 
         } catch (HttpException exception) {
             var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);

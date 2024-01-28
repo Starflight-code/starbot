@@ -72,15 +72,15 @@ namespace StarBot {
 
             scheduledTaskInvoke.WithName("execute-task");
             scheduledTaskInvoke.WithDescription("Invoke a normally scheduled task manually");
-            var builder = new SlashCommandOptionBuilder()
+            var taskInvokeBuilder = new SlashCommandOptionBuilder()
                 .WithName("task-name")
                 .WithDescription("Which task would you like to invoke?")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer);
             for (int i = 0; i < tasks.Count; i++) {
-                builder.AddChoice(tasks[i].name, i);
+                taskInvokeBuilder.AddChoice(tasks[i].name, i);
             }
-            scheduledTaskInvoke.AddOption(builder);
+            scheduledTaskInvoke.AddOption(taskInvokeBuilder);
 
             scheduledTaskSetup.WithName("set-task-channel");
             scheduledTaskSetup.WithDescription("Set the channel for a scheduled task to run in.");
@@ -122,9 +122,12 @@ namespace StarBot {
                 while (true) {
                     Random random = new();
                     int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
+
                     await client.SetGameAsync(Config.STATUS_MESSAGES[indexOfNextStatus].message, type: Config.STATUS_MESSAGES[indexOfNextStatus].activity);
+
                     findNextUp();
                     logNextUp(client);
+
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
                     await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
                     for (int i = 0; i < nextUp.Count; i++) {
