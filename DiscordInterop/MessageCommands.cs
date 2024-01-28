@@ -2,25 +2,34 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using Discord;
 using Discord.WebSocket;
+using StarBot.UserReports;
 
 namespace StarBot.DiscordInterop;
 
 internal class MessageCommands {
     public static async Task UserReport(SocketMessageCommand command, DiscordSocketClient? client, Database data) {
-        if (command.IsDMInteraction || command.GuildId == null) { // in DM channel or erroneous enviroment (not sure why else GuildId would be null)
+        /*if (command.IsDMInteraction || command.GuildId == null) { // in DM channel or erroneous enviroment (not sure why else GuildId would be null)
             await command.RespondAsync("This command can not be executed in the current enviroment. (In DM Channel or GuildID is null)", ephemeral: true);
             return;
         }
         ulong reportChannel;
-        await command.DeferAsync(ephemeral: true);
         try {
             reportChannel = ulong.Parse(data.fetchValue("Report Channel", (ulong)command.GuildId));
         } catch {
             await command.FollowupAsync("This function is not set up yet. Consider contacting server administration.");
             return;
-        }
+        }*/
 
-        var reportedMessage = command.Data.Message;
+        await command.DeferAsync(ephemeral: true);
+
+        if (!await ReportCommand.initialChecks(command, data)) {
+            return;
+        }
+        ulong reportChannel = ulong.Parse(data.fetchValue("Report Channel", (ulong)command.GuildId));
+
+        Report report = new Report(command);
+
+        /*var reportedMessage = command.Data.Message;
         var content = reportedMessage.CleanContent.Trim() == "" ? "<No Content>" : reportedMessage.CleanContent.Trim();
 
         List<Attachment> attached = reportedMessage.Attachments.ToList();
@@ -46,11 +55,11 @@ internal class MessageCommands {
         string attachedURLs = "";
         for (int i = 0; i < attached.Count; i++) { // adds the addToEmbed field
             attachedURLs += attached[i].ProxyUrl + " ";
-        }
+        }*/
 
         // ** Report Log Embed Fields **
 
-        var messageContent = new EmbedFieldBuilder {
+        /*var messageContent = new EmbedFieldBuilder {
             Name = "Message Content",
             Value = content,
             IsInline = false
@@ -104,11 +113,11 @@ internal class MessageCommands {
             //Description = content,
             ThumbnailUrl = reportedMessage.Author.GetAvatarUrl(),
             Fields = new List<EmbedFieldBuilder> { messageContent, reported, reporter, reportedMessageLink, reportedMessageID, messageSentAt, reportReceivedAt, attachments }
-        };
+        };*/
 
-        var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: reportEmbed.Build());
+        var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: report.embed.generateEmbed(report));
 
-        var addToEmbed = new EmbedFieldBuilder { // embed field added to reported message attachment/embed echo
+        /*var addToEmbed = new EmbedFieldBuilder { // embed field added to reported message attachment/embed echo
             Name = "Attached to Report",
             Value = message.GetJumpUrl(),
             IsInline = false
@@ -128,6 +137,15 @@ internal class MessageCommands {
                 await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(message.GetJumpUrl() + " - " + attachedURLs);
             }
             //}
+        }*/
+        List<Report.MessageAttachment> toSend = report.getSendList(message);
+
+        for (int i = 0; i < toSend.Count; i++) {
+            if (toSend[i].isEmbed) {
+                await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: toSend[i].embed);
+            } else {
+                await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(toSend[i].URL);
+            }
         }
 
 
