@@ -93,14 +93,14 @@ namespace StarBot {
                 setupBuilder.AddChoice(tasks[i].name, i);
             }
             scheduledTaskSetup.AddOption(setupBuilder);
-            await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
+            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
                 report.Build(),
                 scheduledTaskInvoke.Build(),
                 scheduledTaskSetup.Build()
-            });
-            //await guild.CreateApplicationCommandAsync(report.Build());
-            //await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
-            //await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
+            });*/
+            await guild.CreateApplicationCommandAsync(report.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);

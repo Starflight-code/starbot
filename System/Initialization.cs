@@ -29,14 +29,15 @@ public static class Initialization {
             .WithType(ApplicationCommandOptionType.Integer));
 
         try {
-            await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
+            await guild.DeleteApplicationCommandsAsync();
+            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
                 dbkeymodify.Build(),
                 dbkeyremove.Build(),
                 setupChannels.Build()
-            });
-            //await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
-            //await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
-            //await guild.CreateApplicationCommandAsync(setupChannels.Build());
+            });*/
+            await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
+            await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
+            await guild.CreateApplicationCommandAsync(setupChannels.Build());
 
         } catch (HttpException exception) {
             var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
