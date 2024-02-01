@@ -40,7 +40,8 @@ namespace StarBot {
             "Cat",
             "Anime",
             "AniMemes",
-            "QOTD"
+            "QOTD",
+            "DBD"
         };
 
         public static StatusMessage[] STATUS_MESSAGES = { // extensions to mark as images (can be decoded by Discord)

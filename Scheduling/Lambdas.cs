@@ -29,7 +29,6 @@ namespace StarBot {
                 await channel.SendMessageAsync("", false, newEmbed.Build());
             }
         };
-
         public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> CatDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Cat Daily API
             if (data.fetchValue("Cat Channel", guildID) == "") { return; }
 
@@ -57,6 +56,49 @@ namespace StarBot {
             newEmbed.WithFooter("powered by https://reddit.com/r/cats/");
 
             await data.iterateValue("CatNumber", guildID);
+
+            if (!Config.DEBUG_MODE) {
+                await channel.SendMessageAsync("", false, newEmbed.Build());
+            }
+        };
+
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> DBD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Cat Daily API
+            if (data.fetchValue("Cat Channel", guildID) == "") { return; }
+
+            string url = "https://www.reddit.com/r/deadbydaylight/.json?limit=100&t=day";
+
+            await data.initializeIterator("DBDNumber", guildID, 1);
+
+            var channel = client.GetChannel(ulong.Parse(data.fetchValue("DBD Channel", guildID))) as SocketTextChannel;
+
+            if (channel == null) {
+                await data.setValue("DBD Channel", "", guildID, true);
+                return;
+            }
+            Func<JToken, bool> validation = (JToken token) => {
+                IEnumerable<JToken> flairs = token["link_flair_richtext"].Values();
+                foreach (JToken flair in flairs) {
+                    if (flair['t'].ToString() == "Shitpost / Meme") {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastDBDIDs", guildID), cache, validation);
+
+            await data.setValue("lastDBDIDs", WebManager.AddNewPostID(data.fetchValue("lastDBDIDs", guildID), Validation.GeneratePostID(post)), guildID);
+
+            EmbedBuilder newEmbed = new() {
+                Title = $"DBD Image #{data.fetchValue("DBDNumber", guildID)}",
+                Description = $"{post["title"]}\n" +
+                                   $"https://reddit.com{post["permalink"]}",
+                ImageUrl = post["url_overridden_by_dest"].ToString()
+            };
+            newEmbed.WithFooter("powered by https://reddit.com/r/deadbydaylight/");
+
+            await data.iterateValue("DBDNumber", guildID);
 
             if (!Config.DEBUG_MODE) {
                 await channel.SendMessageAsync("", false, newEmbed.Build());
