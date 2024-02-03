@@ -63,7 +63,7 @@ namespace StarBot {
         };
 
         public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> DBD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Cat Daily API
-            if (data.fetchValue("Cat Channel", guildID) == "") { return; }
+            if (data.fetchValue("DBD Channel", guildID) == "") { return; }
 
             string url = "https://www.reddit.com/r/deadbydaylight/.json?limit=100&t=day";
 
@@ -76,9 +76,9 @@ namespace StarBot {
                 return;
             }
             Func<JToken, bool> validation = (JToken token) => {
-                IEnumerable<JToken> flairs = token["link_flair_richtext"].Values();
+                var flairs = token["link_flair_richtext"];
                 foreach (JToken flair in flairs) {
-                    if (flair['t'].ToString() == "Shitpost / Meme") {
+                    if (flair["t"].ToString().Contains("Shitpost / Meme")) {
                         return true;
                     }
                 }
