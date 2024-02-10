@@ -39,42 +39,6 @@ internal class SlashCommands {
         await data.updateDB((ulong)command.GuildId);
         await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB((ulong)command.GuildId); });
     }
-    /*public static async Task starbotInterest(SocketSlashCommand command, DiscordSocketClient? client) {
-        if (command.GuildId == null) { return; }
-        var commandArgs = command.Data.Options.ToArray();
-        long interested = (long)commandArgs[0].Value;
-        if (command.GuildId == null) {
-            await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
-            return;
-        }
-        string uiStatus = "";
-        if (interested == 1) {
-            if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
-                uiStatus = "APPROVED";
-                await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).AddRoleAsync(Config.STARBOT_INTEREST_ROLE_ID);
-                await command.RespondAsync($"Your interest in StarBot is appreciated. Your access to backend channels was **{uiStatus}**.\nThis action has been logged. Access to these channels may be revoked at any time for any reason.", ephemeral: true);
-            } else {
-                await command.RespondAsync("You are already enrolled in this program.", ephemeral: true);
-                return;
-            }
-        } else {
-            if (UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
-                uiStatus = "REMOVED";
-                await client.GetGuild((ulong)command.GuildId).GetUser(command.User.Id).RemoveRoleAsync(Config.STARBOT_INTEREST_ROLE_ID);
-                await command.RespondAsync($"Your access to backend channels was **{uiStatus}**.\nThis action has been logged.", ephemeral: true);
-            } else {
-                await command.RespondAsync("You are not enrolled in this program.", ephemeral: true);
-                return;
-            }
-        }
-        await (client.GetChannel(1143815199816699944) as SocketTextChannel).SendMessageAsync(embed: new EmbedBuilder()
-            .WithCurrentTimestamp()
-            .WithImageUrl(command.User.GetAvatarUrl())
-            .WithTitle($"Access {uiStatus} to StarBot Interest Program")
-            .WithDescription($"Username: {command.User.Username}\nStatus: {uiStatus}\nScope:\n- #devlog\n- #autosync-backend")
-            .Build());
-
-    }*/
     public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
         if (command.GuildId == null) { return; }
         await command.DeferAsync(ephemeral: true);

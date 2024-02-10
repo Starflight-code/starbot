@@ -8,17 +8,6 @@ namespace StarBot.DiscordInterop;
 
 internal class MessageCommands {
     public static async Task UserReport(SocketMessageCommand command, DiscordSocketClient? client, Database data) {
-        /*if (command.IsDMInteraction || command.GuildId == null) { // in DM channel or erroneous enviroment (not sure why else GuildId would be null)
-            await command.RespondAsync("This command can not be executed in the current enviroment. (In DM Channel or GuildID is null)", ephemeral: true);
-            return;
-        }
-        ulong reportChannel;
-        try {
-            reportChannel = ulong.Parse(data.fetchValue("Report Channel", (ulong)command.GuildId));
-        } catch {
-            await command.FollowupAsync("This function is not set up yet. Consider contacting server administration.");
-            return;
-        }*/
 
         await command.DeferAsync(ephemeral: true);
 
@@ -29,115 +18,8 @@ internal class MessageCommands {
 
         Report report = new Report(command);
 
-        /*var reportedMessage = command.Data.Message;
-        var content = reportedMessage.CleanContent.Trim() == "" ? "<No Content>" : reportedMessage.CleanContent.Trim();
-
-        List<Attachment> attached = reportedMessage.Attachments.ToList();
-        List<Embed> embeds = reportedMessage.Embeds.ToList();
-
-        string attachmentSummary;
-
-        if (attached.Count == 0 && embeds.Count == 0) { // creates a summary of attached files/embeds for the log
-            attachmentSummary = "None";
-        } else {
-            attachmentSummary = "";
-            for (int i = 0; i < attached.Count; i++) {
-                if (i != 0) { attachmentSummary += "\n"; }
-                attachmentSummary += "- " + attached[i].Filename;
-            }
-            if (0 < attached.Count && 0 < embeds.Count) {
-                attachmentSummary += "\n- " + embeds.Count + " embed(s)";
-            } else if (attached.Count == 0 && 0 < embeds.Count) {
-                attachmentSummary += "- " + embeds.Count + " embed(s)";
-            }
-        }
-
-        string attachedURLs = "";
-        for (int i = 0; i < attached.Count; i++) { // adds the addToEmbed field
-            attachedURLs += attached[i].ProxyUrl + " ";
-        }*/
-
-        // ** Report Log Embed Fields **
-
-        /*var messageContent = new EmbedFieldBuilder {
-            Name = "Message Content",
-            Value = content,
-            IsInline = false
-        };
-
-        var reported = new EmbedFieldBuilder {
-            Name = "Reported",
-            Value = reportedMessage.Author.Mention + " - " + reportedMessage.Author.Username,
-            IsInline = true
-        };
-
-        var reporter = new EmbedFieldBuilder {
-            Name = "Reporter",
-            Value = command.User.Mention + " - " + command.User.Username,
-            IsInline = true
-        };
-
-        var reportedMessageLink = new EmbedFieldBuilder {
-            Name = "Message Link",
-            Value = reportedMessage.GetJumpUrl(),
-            IsInline = false
-        };
-
-        var reportedMessageID = new EmbedFieldBuilder {
-            Name = "Message ID",
-            Value = reportedMessage.Id,
-            IsInline = true
-        };
-
-        var messageSentAt = new EmbedFieldBuilder {
-            Name = "Message Sent",
-            Value = TimestampTag.FromDateTimeOffset(reportedMessage.CreatedAt, style: TimestampTagStyles.ShortDateTime).ToString(),
-            IsInline = true
-        };
-
-        var reportReceivedAt = new EmbedFieldBuilder {
-            Name = "Report Received",
-            Value = TimestampTag.FromDateTimeOffset(command.CreatedAt, style: TimestampTagStyles.ShortDateTime).ToString(),
-            IsInline = true
-        };
-
-        var attachments = new EmbedFieldBuilder {
-            Name = "Attachments",
-            Value = attachmentSummary,
-            IsInline = false
-        };
-
-        var reportEmbed = new EmbedBuilder {
-            Title = "Message Report",
-            Color = Color.DarkRed,
-            //Description = content,
-            ThumbnailUrl = reportedMessage.Author.GetAvatarUrl(),
-            Fields = new List<EmbedFieldBuilder> { messageContent, reported, reporter, reportedMessageLink, reportedMessageID, messageSentAt, reportReceivedAt, attachments }
-        };*/
-
         var message = await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: report.embed.generateEmbed(report));
 
-        /*var addToEmbed = new EmbedFieldBuilder { // embed field added to reported message attachment/embed echo
-            Name = "Attached to Report",
-            Value = message.GetJumpUrl(),
-            IsInline = false
-        };
-
-        if (attached.Count != 0 || embeds.Count != 0) {
-            for (int i = 0; i < embeds.Count; i++) { // echos report message embeds in the log channel
-                if (embeds[i].Url.Contains("tenor")) {
-                    await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embeds[i].Video.ToString());
-                } else {
-                    embeds[i] = embeds[i].ToEmbedBuilder().AddField(addToEmbed).Build();
-                    await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: embeds[i]);
-                }
-            }
-            //for (int i = 0; i < attached.Count; i++) { // echos report message attachments in the log channel
-            if (0 < attached.Count) {
-                await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(message.GetJumpUrl() + " - " + attachedURLs);
-            }
-            //}
-        }*/
         List<Report.MessageAttachment> toSend = report.getSendList(message);
 
         for (int i = 0; i < toSend.Count; i++) {

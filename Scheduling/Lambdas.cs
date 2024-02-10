@@ -78,7 +78,7 @@ namespace StarBot {
             Func<JToken, bool> validation = (JToken token) => {
                 var flairs = token["link_flair_richtext"];
                 foreach (JToken flair in flairs) {
-                    if (flair["t"].ToString().Contains("Shitpost / Meme")) {
+                    if (flair["t"].ToString().Contains("Shitpost / Meme") && Validation.IsLinkToImage(token["url_overridden_by_dest"].ToString())) {
                         return true;
                     }
                 }

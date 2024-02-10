@@ -122,33 +122,38 @@ namespace StarBot {
             Console.WriteLine("Queued Tasks: " + queued);
         }
         public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager) {
+            string debugPosition = "";
             try {
                 while (true) {
+                    debugPosition = "SetActivity";
                     Random random = new();
                     int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
 
                     await client.SetGameAsync(Config.STATUS_MESSAGES[indexOfNextStatus].message, type: Config.STATUS_MESSAGES[indexOfNextStatus].activity);
-
+                    debugPosition = "findNextUp";
                     findNextUp();
                     logNextUp(client);
 
+                    debugPosition = "delay";
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
                     await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
+                    debugPosition = "Executing Lambdas";
                     for (int i = 0; i < nextUp.Count; i++) {
-
+                        debugPosition = $"Executing Lambdas, on: {getTaskName(nextUp[i])}";
                         foreach (SocketGuild guild in client.Guilds) {
                             await tasks[nextUp[i]].lambda.Invoke(client, data, guild.Id, cacheManager);
                         }
-                        Console.WriteLine($"Executed Task {getTaskName(i)}");
+                        Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
                     }
                     foreach (SocketGuild guild in client.Guilds) {
+                        debugPosition = $"Database Update: {guild.Name} ({guild.Id})";
                         await databaseUpdate(client, data, guild.Id);
                     }
                 }
             } catch (Exception e) // logs exceptions to Discord
                     {
                 var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-                await channel.SendMessageAsync(DateTime.Now.ToString() + ": " + e.Message + "\n" + e.StackTrace);
+                await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n--Begin StackTrace--\n{e.StackTrace}\n--End StackTrace--\nPosition: {debugPosition}");
                 throw;
             }
         }
