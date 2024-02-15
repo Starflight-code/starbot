@@ -17,4 +17,4 @@ struct Post {
         this.linkToPost = linkToPost;
     }
 
-}
+};

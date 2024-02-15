@@ -76,13 +76,17 @@ namespace StarBot {
                 return;
             }
             Func<JToken, bool> validation = (JToken token) => {
-                var flairs = token["link_flair_richtext"];
-                foreach (JToken flair in flairs) {
-                    if (flair["t"].ToString().Contains("Shitpost / Meme") && Validation.IsLinkToImage(token["url_overridden_by_dest"].ToString())) {
-                        return true;
+                try {
+                    var flairs = token["link_flair_richtext"];
+                    foreach (JToken flair in flairs) {
+                        if (flair["t"].ToString().Contains("Shitpost / Meme") && Validation.IsLinkToImage(token["url_overridden_by_dest"].ToString())) {
+                            return true;
+                        }
                     }
+                    return false;
+                } catch { // object may be null (for some reason, detected in error logs)
+                    return false; // if there's an error, the post isn't valid
                 }
-                return false;
             };
 
 
