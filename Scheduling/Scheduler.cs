@@ -153,7 +153,7 @@ namespace StarBot {
             } catch (Exception e) // logs exceptions to Discord
                     {
                 var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-                await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n--Begin StackTrace--\n{e.StackTrace}\n--End StackTrace--\nPosition: {debugPosition}");
+                await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {debugPosition}");
                 throw;
             }
         }
