@@ -9,9 +9,9 @@ namespace StarBot {
 
         public struct scheduledTask {
             public CrontabSchedule schedule;
-            public Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> lambda;
+            public Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> lambda;
             public string name;
-            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> lambda, string name) {
+            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> lambda, string name) {
                 this.schedule = schedule;
                 this.lambda = lambda;
                 this.name = name;
@@ -23,7 +23,7 @@ namespace StarBot {
         public string getTaskName(int taskIndex) {
             return tasks[taskIndex].name;
         }
-        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, Caching.MemoryCacheManager, Task> lambda, string taskName) {
+        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> lambda, string taskName) {
             tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
@@ -54,39 +54,63 @@ namespace StarBot {
             DateTime waitUntil = tasks[nextUp[0]].schedule.GetNextOccurrence(DateTime.Now).ToLocalTime();
             return waitUntil.ToShortTimeString() + " on " + waitUntil.ToShortDateString();
         }
-        public async Task databaseUpdate(DiscordSocketClient client, Database data) {
-            await data.updateDB();
-            if (!Config.DEBUG_MODE) {
-                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(); });
-            }
+        public async Task databaseUpdate(DiscordSocketClient client, Database data, ulong guildID) {
+            await data.updateDB(guildID);
+            /*if (!Config.DEBUG_MODE) {
+                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(guildID); });
+            }*/
         }
 
         public async Task addInvokeCommand(SocketGuild? guild) {
             var report = new MessageCommandBuilder();
+            var scheduledTaskInvoke = new SlashCommandBuilder();
+            var scheduledTaskSetup = new SlashCommandBuilder();
+
+
             report.WithName("Report Message");
             report.WithDMPermission(false);
-            await guild.CreateApplicationCommandAsync(report.Build());
 
-            var scheduledTaskInvoke = new SlashCommandBuilder();
             scheduledTaskInvoke.WithName("execute-task");
             scheduledTaskInvoke.WithDescription("Invoke a normally scheduled task manually");
-            var builder = new SlashCommandOptionBuilder()
+            var taskInvokeBuilder = new SlashCommandOptionBuilder()
                 .WithName("task-name")
                 .WithDescription("Which task would you like to invoke?")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer);
             for (int i = 0; i < tasks.Count; i++) {
-                builder.AddChoice(tasks[i].name, i);
+                taskInvokeBuilder.AddChoice(tasks[i].name, i);
             }
-            scheduledTaskInvoke.AddOption(builder);
+            scheduledTaskInvoke.AddOption(taskInvokeBuilder);
+
+            scheduledTaskSetup.WithName("set-task-channel");
+            scheduledTaskSetup.WithDescription("Set the channel for a scheduled task to run in.");
+            var setupBuilder = new SlashCommandOptionBuilder()
+                .WithName("task-name")
+                .WithDescription("Which task would you like to set up?")
+                .WithRequired(true)
+                .WithType(ApplicationCommandOptionType.Integer);
+            for (int i = 0; i < tasks.Count; i++) {
+                setupBuilder.AddChoice(tasks[i].name, i);
+            }
+            scheduledTaskSetup.AddOption(setupBuilder);
+            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
+                report.Build(),
+                scheduledTaskInvoke.Build(),
+                scheduledTaskSetup.Build()
+            });*/
+            await guild.CreateApplicationCommandAsync(report.Build());
             await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
+        }
+        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
+            await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);
+            await databaseUpdate(client, data, guildID);
+        }
+
+        public void returnTaskDbName(int taskIndex) {
 
         }
-        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager) {
-            await tasks[taskIndex].lambda.Invoke(client, data, cacheManager);
-            await databaseUpdate(client, data);
-        }
-        public void logNextUp() {
+        public void logNextUp(DiscordSocketClient client) {
             Console.WriteLine("Waiting until " + waitTimeReadable());
             string queued = "";
             for (int j = 0; j < nextUp.Count; j++) {
@@ -98,21 +122,38 @@ namespace StarBot {
             Console.WriteLine("Queued Tasks: " + queued);
         }
         public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager) {
+            string debugPosition = "";
             try {
                 while (true) {
+                    debugPosition = "SetActivity";
+                    Random random = new();
+                    int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
+
+                    await client.SetGameAsync(Config.STATUS_MESSAGES[indexOfNextStatus].message, type: Config.STATUS_MESSAGES[indexOfNextStatus].activity);
+                    debugPosition = "findNextUp";
                     findNextUp();
-                    logNextUp();
+                    logNextUp(client);
+
+                    debugPosition = "delay";
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
+                    await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
+                    debugPosition = "Executing Lambdas";
                     for (int i = 0; i < nextUp.Count; i++) {
-                        await tasks[nextUp[i]].lambda.Invoke(client, data, cacheManager);
-                        Console.WriteLine($"Executed Task {getTaskName(i)}");
+                        debugPosition = $"Executing Lambdas, on: {getTaskName(nextUp[i])}";
+                        foreach (SocketGuild guild in client.Guilds) {
+                            await tasks[nextUp[i]].lambda.Invoke(client, data, guild.Id, cacheManager);
+                        }
+                        Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
                     }
-                    await databaseUpdate(client, data);
+                    foreach (SocketGuild guild in client.Guilds) {
+                        debugPosition = $"Database Update: {guild.Name} ({guild.Id})";
+                        await databaseUpdate(client, data, guild.Id);
+                    }
                 }
             } catch (Exception e) // logs exceptions to Discord
                     {
                 var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-                await channel.SendMessageAsync(DateTime.Now.ToString() + ": " + e.Message + "\n" + e.StackTrace);
+                await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {debugPosition}");
                 throw;
             }
         }

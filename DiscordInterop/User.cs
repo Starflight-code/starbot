@@ -14,4 +14,11 @@ internal class UserManager {
         }
         return false;
     }
+    public static bool userHasManageServer(DiscordSocketClient? client, ulong? guildID, ulong userID) {
+        if (guildID == null) {
+            return false;
+        }
+        var userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
+        return userPermissions.Has(Discord.GuildPermission.ManageGuild);
+    }
 }

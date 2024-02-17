@@ -398,5 +398,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Project Specific
-#Config.cs
 *.db
+guilds/*
+DeveloperNotes.txt

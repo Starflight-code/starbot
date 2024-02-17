@@ -6,9 +6,8 @@ using StarBot.DiscordInterop;
 namespace StarBot {
     internal class Program {
         private Scheduler scheduler = new();
-        private Database data = new();
         private DiscordSocketClient? client;
-        SocketGuild? guild;
+        private Database? data;
         MemoryCacheManager cacheManager = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
@@ -26,8 +25,8 @@ namespace StarBot {
             }
             client.SlashCommandExecuted += SlashCommandHandler;
             client.MessageCommandExecuted += MessageCommandHandler;
-            if (args.Length > 0 || Config.DEBUG_MODE) {
-                await client.LoginAsync(TokenType.Bot, Config.DEBUG_MODE ? Config.KEY : args[0]); // uses Config key in debug mode
+            if (args.Length > 0 || Config.KEY != "") {
+                await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
                 Console.WriteLine("You have not specified a key and this binary is not in debug mode.");
                 Environment.Exit(1);
@@ -37,26 +36,33 @@ namespace StarBot {
 
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
-                this.guild = client.GetGuild(696808297805774888);
+                data = new(client);
+                for (int i = 0; i < data.guilds.Count(); i++) {
+                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]));
+                }
                 ready = true;
-                await Initialization.CreateSlashCommandsAsync(client, guild);
             };
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
-            if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
-                string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
+            //if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
+            //    string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
 
-                data.setSerializedDB(syncMessage);
-                await data.updateDB();
-            }
+            //    data.setSerializedDB(syncMessage);
+            //await data.updateDB();
+            //}
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AniMemesDaily_Automation, "Animemes Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.QuestionOfTheDay_Automation, "Question of the Day Automation");
+            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.DBD_Automation, "Dead by Daylight Automation");
 
-            await scheduler.addInvokeCommand(guild);
+            for (int i = 0; i < data.guilds.Count(); i++) {
+                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]));
+            }
+
+            if (data == null) { return; }
             await scheduler.schedulerProcess(client, data, cacheManager);
             await Task.Delay(-1);
         }
@@ -67,7 +73,8 @@ namespace StarBot {
             //Console.WriteLine($"{message} -> {after}");
         }
         private async Task SlashCommandHandler(SocketSlashCommand command) {
-            if (client == null) { return; }
+            if (client == null || data == null) { return; }
+            if (command.IsDMInteraction) { await command.RespondAsync("This command can not be used in a DM."); return; }
             switch (command.CommandName) {
                 case "key-modify":
                     await SlashCommands.keySet(command, client, data);
@@ -75,18 +82,21 @@ namespace StarBot {
                 case "key-remove":
                     await SlashCommands.keyRemove(command, client, data);
                     break;
-                case "starbot-interest":
-                    await SlashCommands.starbotInterest(command, client);
+                case "setup-channel":
+                    await SlashCommands.setupChannels(command, client, data);
                     break;
                 case "execute-task":
                     await SlashCommands.executeTask(command, scheduler, client, data, cacheManager);
+                    break;
+                case "set-task-channel":
+                    await SlashCommands.setUpTask(command, scheduler, client, data, cacheManager);
                     break;
             }
         }
 
         private async Task MessageCommandHandler(SocketMessageCommand command) {
-            if (client == null) {
-                await command.RespondAsync("A catastrophic error has been detected. This command will not be executed! (DiscordSocketClient object is null)", ephemeral: true);
+            if (client == null || data == null) {
+                await command.RespondAsync("A catastrophic error has been detected. This command will not be executed! (DiscordSocketClient object or Database is null)", ephemeral: true);
                 return;
             }
             switch (command.CommandName) {

@@ -4,9 +4,9 @@ using Newtonsoft.Json;
 namespace StarBot {
     internal class DatabaseObject {
         private Dictionary<string, string> data;
-        public DatabaseObject() {
+        public DatabaseObject(ulong guildID) {
             data = new Dictionary<string, string>();
-            populateSelf();
+            populateSelf(guildID);
         }
         public bool equals(DatabaseObject otherObject) {
             return otherObject.data.Equals(data);
@@ -37,14 +37,18 @@ namespace StarBot {
             return data.TryGetValue(key, out string? _);
         }
 
+        public string[] getAllKeys() {
+            return data.Keys.ToArray();
+        }
 
 
-        public bool populateSelf() {
-            if (!File.Exists(Compatiblity.buildPath(Directory.GetCurrentDirectory() + "\\database.db"))) {
+
+        public bool populateSelf(ulong guildID) {
+            if (!File.Exists(Compatiblity.buildPath(Config.DATABASE_DIRECTORY + $"{guildID}.db"))) {
                 return false;
             };
 
-            string dbString = File.ReadAllText(Compatiblity.buildPath(Directory.GetCurrentDirectory() + "\\database.db"));
+            string dbString = File.ReadAllText(Compatiblity.buildPath(Config.DATABASE_DIRECTORY + $"{guildID}.db"));
             Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(dbString);
             if (db == null) {
                 return false;
@@ -71,9 +75,9 @@ namespace StarBot {
             }
             return true;
         }
-        public async Task updateSelf() {
+        public async Task updateSelf(ulong guildID) {
             string database = JsonConvert.SerializeObject(data);
-            await File.WriteAllTextAsync(Compatiblity.buildPath(Directory.GetCurrentDirectory() + "\\database.db"), database);
+            await File.WriteAllTextAsync(Compatiblity.buildPath(Config.DATABASE_DIRECTORY + $"/{guildID}.db"), database);
         }
 
         public string getSerializedSelf() {

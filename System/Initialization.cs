@@ -8,7 +8,7 @@ public static class Initialization {
     public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
-        var starbotInterest = new SlashCommandBuilder();
+        var setupChannels = new SlashCommandBuilder();
 
         dbkeymodify.WithName("key-modify");
         dbkeymodify.WithDescription("Modify a key value pair in the database");
@@ -19,22 +19,25 @@ public static class Initialization {
         dbkeyremove.WithDescription("Remove a key value pair in the database");
         dbkeyremove.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to remove", isRequired: true);
 
-        starbotInterest.WithName("starbot-interest");
-        starbotInterest.WithDescription("Are you interesting in seeing notes from our developer and some inner workings of StarBot?");
-        starbotInterest.AddOption(new SlashCommandOptionBuilder()
-            .WithName("interested")
-            .WithDescription("See the inner workings and dev notes for StarBot?")
-            .AddChoice("Yes", 1)
-            .AddChoice("No", 0)
+        setupChannels.WithName("setup-channel");
+        setupChannels.WithDescription("Associate systems with log channels to make them work.");
+        setupChannels.AddOption(new SlashCommandOptionBuilder()
+            .WithName("assign-channel")
+            .WithDescription("Which function do you want to assign to the current channel?")
+            .AddChoice("Report Log", 0)
             .WithRequired(true)
             .WithType(ApplicationCommandOptionType.Integer));
 
         try {
-            // Now that we have our builder, we can call the CreateApplicationCommandAsync method to make our slash command.
             await guild.DeleteApplicationCommandsAsync();
+            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
+                dbkeymodify.Build(),
+                dbkeyremove.Build(),
+                setupChannels.Build()
+            });*/
             await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
             await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
-            await guild.CreateApplicationCommandAsync(starbotInterest.Build());
+            await guild.CreateApplicationCommandAsync(setupChannels.Build());
 
         } catch (HttpException exception) {
             var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
