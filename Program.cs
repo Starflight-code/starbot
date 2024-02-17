@@ -45,12 +45,6 @@ namespace StarBot {
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
-            //if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
-            //    string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
-
-            //    data.setSerializedDB(syncMessage);
-            //await data.updateDB();
-            //}
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
