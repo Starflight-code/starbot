@@ -126,4 +126,46 @@ class WebManager {
             cache.AddToCache(url, DateTime.Now.AddHours(Config.HOURS_TO_CACHE), json);*/
         return json["data"]["children"][randomValue]["data"];
     }
+
+    public static JToken? SelectRandomRedditPost(string url, string lastIDCache, StarBot.Caching.MemoryCacheManager cacheManager, List<Func<JToken, bool>> validation, bool containsImage = true) {
+        /*bool useCache = true;
+        if (cache == null || default(JObject) == cache.RequestFromCache<JObject>(url)) {
+            useCache = false;
+        }
+        JObject? json;
+        switch (useCache) {
+            case true:
+                json = cache.RequestFromCache<JObject>(url);
+                break;
+            case false:
+                json = FetchJSON(url);
+                break;
+        }*/
+        JObject json = cacheManager.FetchJSONFromCache(url);
+
+        Random rand = new();
+        int i = 0;
+        int randomValue;
+        while (true) {
+            i++;
+            randomValue = rand.Next(100); // 0-99
+            JToken? token = json["data"]["children"][randomValue]["data"];
+            bool valid = true;
+            for (int j = 0; j < validation.Count(); j++) {
+                if (!validation[j](token)) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) {
+                break;
+            }
+            if (i >= 150) {
+                json = FetchJSON(url);
+            }
+        }
+        /*if (!useCache) {
+            cache.AddToCache(url, DateTime.Now.AddHours(Config.HOURS_TO_CACHE), json);*/
+        return json["data"]["children"][randomValue]["data"];
+    }
 };

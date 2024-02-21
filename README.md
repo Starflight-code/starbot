@@ -1,6 +1,6 @@
 # StarBot
 ## Requirements
-- Dotnet 8.x
+- Dotnet 6.x
 - A Discord Bot Token
 
 ## Supported Platforms
