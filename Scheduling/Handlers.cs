@@ -4,6 +4,9 @@ using Newtonsoft.Json.Linq;
 using StarBot;
 using StarBot.Scheduling;
 internal class Handlers {
+    public static Func<HandlerArgs, Task<Post>> xkcdHandler = async (HandlerArgs runtimeData) => {
+
+    };
     public static Func<HandlerArgs, Task<Post>> redditHandler = async (HandlerArgs runtimeData) => {
         //if (runtimeData.data.fetchValue(runtimeData.channelKey, runtimeData.guildID) == "") { return false; }
 

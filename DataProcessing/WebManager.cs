@@ -1,10 +1,22 @@
 using Discord;
+using Discord.WebSocket;
 using Flurl;
 using Flurl.Http;
 using Newtonsoft.Json.Linq;
 using StarBot;
 
 class WebManager {
+    public struct databaseLookupValues {
+        public string channelKey;
+        public ulong guildID;
+        public string iteratorKey;
+        public databaseLookupValues(string channelKey, string iteratorKey, ulong guildID) {
+            this.channelKey = channelKey;
+            this.iteratorKey = iteratorKey;
+            this.guildID = guildID;
+        }
+
+    }
 
     public static dynamic FetchJSON(string URL) {
         var site = new Url(URL);
@@ -55,6 +67,24 @@ class WebManager {
             }
         }
         return json["data"]["children"][randomValue]["data"];
+    }
+
+    public static async void sendPost(Post post, databaseLookupValues dbVals, Database data, string baseName, DiscordSocketClient client) {
+        if (!post.isValid()) {
+            throw new ArgumentNullException("\"post\" is not valid (title, body and/or iterative null), required values not provided upon object construction.");
+        } 
+        EmbedBuilder newEmbed = new() {
+            Title = (bool)post.iterative ? $"{baseName} Image #{data.fetchValue(dbVals.iteratorKey, dbVals.guildID)}" : $"{baseName}: {post.title}",
+            Description = post.body + "\n" +
+                               post.linkToPost,
+            ImageUrl = post.multimediaURL
+        };
+        //newEmbed.WithFooter("powered by https://reddit.com/r/cats/");*/
+        ulong channelID = ulong.Parse(data.fetchValue(dbVals.channelKey, dbVals.guildID));
+        SocketTextChannel? channel = client.GetChannel(channelID) as SocketTextChannel;
+        if (!Config.DEBUG_MODE) {
+            await channel.SendMessageAsync("", false, newEmbed.Build());
+        }
     }
 
     public static JToken? SelectRandomRedditPost(string url, string lastIDCache, StarBot.Caching.MemoryCacheManager cacheManager, bool containsImage = true) {

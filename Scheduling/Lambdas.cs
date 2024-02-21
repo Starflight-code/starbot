@@ -46,7 +46,7 @@ namespace StarBot {
             JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastCatIDs", guildID), cache);
 
             await data.setValue("lastCatIDs", WebManager.AddNewPostID(data.fetchValue("lastCatIDs", guildID), Validation.GeneratePostID(post)), guildID);
-
+            
             EmbedBuilder newEmbed = new() {
                 Title = $"Daily Cat Image #{data.fetchValue("CatNumber", guildID)}",
                 Description = $"{post["title"]}\n" +
@@ -54,6 +54,7 @@ namespace StarBot {
                 ImageUrl = post["url_overridden_by_dest"].ToString()
             };
             newEmbed.WithFooter("powered by https://reddit.com/r/cats/");
+            //WebManager.sendPost()
 
             await data.iterateValue("CatNumber", guildID);
 
