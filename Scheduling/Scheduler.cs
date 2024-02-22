@@ -142,6 +142,9 @@ namespace StarBot {
                         debugPosition = $"Executing Lambdas, on: {getTaskName(nextUp[i])}";
                         foreach (SocketGuild guild in client.Guilds) {
                             await tasks[nextUp[i]].lambda.Invoke(client, data, guild.Id, cacheManager);
+                            if (i == 0) {
+                                watcher.CheckCommands(client, guild);
+                            }
                         }
                         Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
                     }
