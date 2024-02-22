@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using StarBot;
 
 public static class Initialization {
-    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild) {
+    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Watcher watcher) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
         var setupChannels = new SlashCommandBuilder();
@@ -35,9 +35,10 @@ public static class Initialization {
                 dbkeyremove.Build(),
                 setupChannels.Build()
             });*/
-            await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
-            await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
-            await guild.CreateApplicationCommandAsync(setupChannels.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, dbkeymodify.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, dbkeyremove.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, setupChannels.Build());
+
 
         } catch (HttpException exception) {
             var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
