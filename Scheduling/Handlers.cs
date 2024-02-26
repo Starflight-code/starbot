@@ -5,7 +5,8 @@ using StarBot;
 using StarBot.Scheduling;
 internal class Handlers {
     public static Func<HandlerArgs, Task<Post>> xkcdHandler = async (HandlerArgs runtimeData) => {
-
+        await Task.Delay(0);
+        return new Post();
     };
     public static Func<HandlerArgs, Task<Post>> redditHandler = async (HandlerArgs runtimeData) => {
         //if (runtimeData.data.fetchValue(runtimeData.channelKey, runtimeData.guildID) == "") { return false; }
