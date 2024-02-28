@@ -3,12 +3,20 @@ using Discord.WebSocket;
 namespace StarBot.Scheduling;
 
 internal class Instance {
-    readonly Func<HandlerArgs, bool> resourceHandler;
-    readonly string? iteratorKey;
-    readonly string? channelKey;
+    public enum siteToHandle {
+        XKCD,
+        Reddit
+    }
+    readonly Func<HandlerArgs, Task<Post>> resourceHandler;
 
-    public Instance(Func<HandlerArgs, bool> resourceHandler, string? iteratorKey) {
-        this.resourceHandler = resourceHandler;
-        this.iteratorKey = iteratorKey;
+    public Instance(siteToHandle site) {
+        switch(site) {
+            case siteToHandle.Reddit:
+                    this.resourceHandler = Handlers.redditHandler;
+                    break;
+                case siteToHandle.XKCD:
+                    this.resourceHandler = Handlers.xkcdHandler;
+                    break;
+        }
     }
 }

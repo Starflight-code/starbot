@@ -17,6 +17,7 @@ namespace StarBot {
 
 
         public async Task MainAsync(string[] args) {
+            Watcher watcher = new();
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
@@ -38,19 +39,13 @@ namespace StarBot {
                 Console.WriteLine("Bot is connected!");
                 data = new(client);
                 for (int i = 0; i < data.guilds.Count(); i++) {
-                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]));
+                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]), watcher);
                 }
                 ready = true;
             };
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
-            //if (data.fetchValue("FirstRun") == "") { // import data from Discord upon first run
-            //    string syncMessage = (await (client.GetChannel(1125899458002034799) as SocketTextChannel).GetMessageAsync(1143042164490772502)).CleanContent; // cross bot instance automatic sync/cloud backup using Discord
-
-            //    data.setSerializedDB(syncMessage);
-            //await data.updateDB();
-            //}
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
@@ -59,11 +54,11 @@ namespace StarBot {
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.DBD_Automation, "Dead by Daylight Automation");
 
             for (int i = 0; i < data.guilds.Count(); i++) {
-                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]));
+                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]), watcher);
             }
 
             if (data == null) { return; }
-            await scheduler.schedulerProcess(client, data, cacheManager);
+            await scheduler.schedulerProcess(client, data, cacheManager, watcher);
             await Task.Delay(-1);
         }
 

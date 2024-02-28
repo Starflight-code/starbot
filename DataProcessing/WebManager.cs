@@ -1,10 +1,22 @@
 using Discord;
+using Discord.WebSocket;
 using Flurl;
 using Flurl.Http;
 using Newtonsoft.Json.Linq;
 using StarBot;
 
 class WebManager {
+    public struct databaseLookupValues {
+        public string channelKey;
+        public ulong guildID;
+        public string iteratorKey;
+        public databaseLookupValues(string channelKey, string iteratorKey, ulong guildID) {
+            this.channelKey = channelKey;
+            this.iteratorKey = iteratorKey;
+            this.guildID = guildID;
+        }
+
+    }
 
     public static dynamic FetchJSON(string URL) {
         var site = new Url(URL);
@@ -55,6 +67,24 @@ class WebManager {
             }
         }
         return json["data"]["children"][randomValue]["data"];
+    }
+
+    public static async void sendPost(Post post, databaseLookupValues dbVals, Database data, string baseName, DiscordSocketClient client) {
+        if (!post.isValid()) {
+            throw new ArgumentNullException("\"post\" is not valid (title, body and/or iterative null), required values not provided upon object construction.");
+        } 
+        EmbedBuilder newEmbed = new() {
+            Title = (bool)post.iterative ? $"{baseName} Image #{data.fetchValue(dbVals.iteratorKey, dbVals.guildID)}" : $"{baseName}: {post.title}",
+            Description = post.body + "\n" +
+                               post.linkToPost,
+            ImageUrl = post.multimediaURL
+        };
+        //newEmbed.WithFooter("powered by https://reddit.com/r/cats/");*/
+        ulong channelID = ulong.Parse(data.fetchValue(dbVals.channelKey, dbVals.guildID));
+        SocketTextChannel? channel = client.GetChannel(channelID) as SocketTextChannel;
+        if (!Config.DEBUG_MODE) {
+            await channel.SendMessageAsync("", false, newEmbed.Build());
+        }
     }
 
     public static JToken? SelectRandomRedditPost(string url, string lastIDCache, StarBot.Caching.MemoryCacheManager cacheManager, bool containsImage = true) {
@@ -116,6 +146,48 @@ class WebManager {
             randomValue = rand.Next(100); // 0-99
             JToken? token = json["data"]["children"][randomValue]["data"];
             if (validation(token)) {
+                break;
+            }
+            if (i >= 150) {
+                json = FetchJSON(url);
+            }
+        }
+        /*if (!useCache) {
+            cache.AddToCache(url, DateTime.Now.AddHours(Config.HOURS_TO_CACHE), json);*/
+        return json["data"]["children"][randomValue]["data"];
+    }
+
+    public static JToken? SelectRandomRedditPost(string url, string lastIDCache, StarBot.Caching.MemoryCacheManager cacheManager, List<Func<JToken, bool>> validation, bool containsImage = true) {
+        /*bool useCache = true;
+        if (cache == null || default(JObject) == cache.RequestFromCache<JObject>(url)) {
+            useCache = false;
+        }
+        JObject? json;
+        switch (useCache) {
+            case true:
+                json = cache.RequestFromCache<JObject>(url);
+                break;
+            case false:
+                json = FetchJSON(url);
+                break;
+        }*/
+        JObject json = cacheManager.FetchJSONFromCache(url);
+
+        Random rand = new();
+        int i = 0;
+        int randomValue;
+        while (true) {
+            i++;
+            randomValue = rand.Next(100); // 0-99
+            JToken? token = json["data"]["children"][randomValue]["data"];
+            bool valid = true;
+            for (int j = 0; j < validation.Count(); j++) {
+                if (!validation[j](token)) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) {
                 break;
             }
             if (i >= 150) {

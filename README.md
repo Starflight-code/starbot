@@ -1,6 +1,6 @@
 # StarBot
 ## Requirements
-- Dotnet 8.x
+- Dotnet 6.x
 - A Discord Bot Token
 
 ## Supported Platforms
@@ -8,10 +8,15 @@
 
 ## Build/Deploy Instructions
 - Pull the Repo
-- Edit Configuration File
+- Edit Configuration File (System/Config.cs)
 - Run: dotnet publish -r linux-x64
-- Run: chmod +x {path to generated executable}
+- Run: chmod +x {path to generated executable} (Optional, depending on permissions)
 - Execute generated executable with the Discord Bot Token as an argument (./starbot {bot token})
 
 ## Information
-This bot was custom built for a Discord server called StarHub. It searches for Reddit Posts and XKCDs based on CRON intervals, or when manually executed. Let me know if you'd like to contribute.
+This bot was custom built for a Discord server called StarHub. It can
+- Search for XKCDs, and Reddit Posts, populating channels based on cron schedules
+- Handle user reports
+- (more to come)
+
+Let me know if you'd like to contribute.
