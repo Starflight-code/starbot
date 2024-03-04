@@ -1,5 +1,3 @@
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using Discord;
 using Discord.WebSocket;
 using StarBot.UserReports;

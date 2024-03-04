@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using StarBot.Caching;
 
 namespace StarBot.DiscordInterop;

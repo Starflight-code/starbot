@@ -1,8 +1,3 @@
-using System.Collections.Concurrent;
-using System.ComponentModel;
-using Newtonsoft.Json.Linq;
-using StarBot;
-
 namespace StarBot.Caching;
 public class MemoryCache {
     struct CachedObject<T> {

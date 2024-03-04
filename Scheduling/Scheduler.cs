@@ -1,4 +1,3 @@
-using System.Net.Cache;
 using Discord;
 using Discord.WebSocket;
 using NCrontab;

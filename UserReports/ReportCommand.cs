@@ -1,5 +1,4 @@
 using Discord.WebSocket;
-using StarBot;
 
 namespace StarBot.UserReports;
 class ReportCommand {

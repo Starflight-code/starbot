@@ -1,5 +1,3 @@
-using Discord.WebSocket;
-
 namespace StarBot.Scheduling;
 
 internal class Instance {
@@ -7,7 +5,7 @@ internal class Instance {
         XKCD,
         Reddit
     }
-    readonly Func<HandlerArgs, Task<Post>> resourceHandler;
+    readonly Func<HandlerArgs, Task<Post>>? resourceHandler;
 
     public Instance(siteToHandle site) {
         switch(site) {
@@ -17,6 +15,8 @@ internal class Instance {
                 case siteToHandle.XKCD:
                     this.resourceHandler = Handlers.xkcdHandler;
                     break;
+                default:
+                    return;
         }
     }
 }

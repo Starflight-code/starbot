@@ -1,5 +1,3 @@
-using System.Net.NetworkInformation;
-using System.Reflection.Metadata;
 using StarBot;
 
 class Link {
