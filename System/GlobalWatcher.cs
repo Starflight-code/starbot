@@ -31,11 +31,11 @@ public class Watcher {
         }
     }
     List<Command> registeredCommands = new();
-    public void RegisterCommand(ulong commandID, ulong guildID, Database data, SlashCommandProperties? slashData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, SlashCommandProperties? slashData) {
         registeredCommands.Add(new(commandID, guildID, slashData));
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
     }
-    public void RegisterCommand(ulong commandID, ulong guildID, Database data, MessageCommandProperties? messageData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, MessageCommandProperties? messageData) {
         registeredCommands.Add(new(commandID, guildID, messageData));
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
     }
