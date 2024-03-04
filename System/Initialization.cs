@@ -35,9 +35,9 @@ public static class Initialization {
                 dbkeyremove.Build(),
                 setupChannels.Build()
             });*/
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, dbkeymodify.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, dbkeyremove.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, setupChannels.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, guild.Id, dbkeymodify.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, guild.Id, dbkeyremove.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, guild.Id, setupChannels.Build());
 
 
         } catch (HttpException exception) {

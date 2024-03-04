@@ -97,9 +97,9 @@ namespace StarBot {
                 scheduledTaskInvoke.Build(),
                 scheduledTaskSetup.Build()
             });*/
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, report.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, scheduledTaskInvoke.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, scheduledTaskSetup.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, guild.Id, report.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, guild.Id, scheduledTaskInvoke.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, guild.Id, scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);
