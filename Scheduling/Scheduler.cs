@@ -55,9 +55,6 @@ namespace StarBot {
         }
         public async Task databaseUpdate(DiscordSocketClient client, Database data, ulong guildID) {
             await data.updateDB(guildID);
-            /*if (!Config.DEBUG_MODE) {
-                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(guildID); });
-            }*/
         }
 
         public async Task addInvokeCommand(SocketGuild? guild, Watcher watcher) {
