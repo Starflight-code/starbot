@@ -1,7 +1,7 @@
 ﻿using Discord.WebSocket;
 
 namespace StarBot {
-    internal class Database {
+    public class Database {
         Dictionary<ulong, DatabaseObject> databases; // guildID will find associated DatabaseObject
         //DatabaseObject data;
         public List<ulong> guilds;

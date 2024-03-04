@@ -1,5 +1,8 @@
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Newtonsoft.Json;
+using StarBot;
 
 public class Watcher {
     public struct Command {
@@ -28,11 +31,13 @@ public class Watcher {
         }
     }
     List<Command> registeredCommands = new();
-    public void RegisterCommand(ulong commandID, ulong guildID, SlashCommandProperties? slashData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, Database data, SlashCommandProperties? slashData) {
         registeredCommands.Add(new(commandID, guildID, slashData));
+        //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
     }
-    public void RegisterCommand(ulong commandID, ulong guildID, MessageCommandProperties? messageData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, Database data, MessageCommandProperties? messageData) {
         registeredCommands.Add(new(commandID, guildID, messageData));
+        //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
     }
     public int FindID(ulong commandID) {
         for (int i = 0; i < registeredCommands.Count(); i++) {
