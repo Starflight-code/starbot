@@ -1,5 +1,8 @@
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Newtonsoft.Json;
+using StarBot;
 
 public class Watcher {
     public struct Command {
@@ -8,28 +11,33 @@ public class Watcher {
             slash
         }
         public readonly ulong id;
+        public readonly ulong guildID;
         public readonly SlashCommandProperties? slashData;
         public readonly MessageCommandProperties? messageData;
         public readonly CommandType type;
-        public Command(ulong id, SlashCommandProperties commandData) {
+        public Command(ulong id, ulong guildID, SlashCommandProperties commandData) {
             this.id = id;
+            this.guildID = guildID;
             this.slashData = commandData;
             this.messageData = null;
             type = CommandType.slash;
         }
-        public Command(ulong id, MessageCommandProperties commandData) {
+        public Command(ulong id, ulong guildID, MessageCommandProperties commandData) {
             this.id = id;
+            this.guildID = guildID;
             this.slashData = null;
             this.messageData = commandData;
             type = CommandType.message;
         }
     }
     List<Command> registeredCommands = new();
-    public void RegisterCommand(ulong commandID, SlashCommandProperties? slashData) {
-        registeredCommands.Add(new(commandID, slashData));
+    public void RegisterCommand(ulong commandID, ulong guildID, SlashCommandProperties? slashData) {
+        registeredCommands.Add(new(commandID, guildID, slashData));
+        //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
     }
-    public void RegisterCommand(ulong commandID, MessageCommandProperties? messageData) {
-        registeredCommands.Add(new(commandID, messageData));
+    public void RegisterCommand(ulong commandID, ulong guildID, MessageCommandProperties? messageData) {
+        registeredCommands.Add(new(commandID, guildID, messageData));
+        //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
     }
     public int FindID(ulong commandID) {
         for (int i = 0; i < registeredCommands.Count(); i++) {
@@ -49,8 +57,9 @@ public class Watcher {
             List<int> registerAgainIndexes = new();
             bool foundID = false;
             for (int i = 0; i < registeredCommands.Count(); i++) { // finds commands Discord removed or were otherwise removed some other way
+            if (guild.Id == registeredCommands[i].guildID) {
                 for (int j = 0; j < commandList.Count; j++) {
-                    if (commandList[i].Id == registeredCommands[j].id) {
+                    if (commandList[j].Id == registeredCommands[i].id) {
                         foundID = true;
                         break;
                     }
@@ -60,18 +69,18 @@ public class Watcher {
                     registerAgainIndexes.Add(i);
                 }
                 foundID = false;
-            }
+            }}
             SocketApplicationCommand command;
             for (int i = 0; i < registerAgain.Count; i++) { // adds re-registered commands back
                 switch(registerAgain[i].type) {
                     case Command.CommandType.slash:
                     command = await guild.CreateApplicationCommandAsync(registerAgain[i].slashData);
-                    registeredCommands.Add(new(command.Id, registerAgain[i].slashData));
+                    registeredCommands.Add(new(command.Id, guild.Id, registerAgain[i].slashData));
 
                     break;
                     case Command.CommandType.message:
                     command = await guild.CreateApplicationCommandAsync(registerAgain[i].messageData);
-                    registeredCommands.Add(new(command.Id, registerAgain[i].messageData));
+                    registeredCommands.Add(new(command.Id, guild.Id, registerAgain[i].messageData));
                     break;
                 }
             }

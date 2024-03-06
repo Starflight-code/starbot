@@ -29,7 +29,7 @@ namespace StarBot {
             if (args.Length > 0 || Config.KEY != "") {
                 await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
-                Console.WriteLine("You have not specified a key and this binary is not in debug mode.");
+                Console.WriteLine("You have not specified a key in config or as an argument. This program will now exit.");
                 Environment.Exit(1);
             }
 

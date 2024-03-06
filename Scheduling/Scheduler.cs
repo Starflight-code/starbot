@@ -1,4 +1,3 @@
-using System.Net.Cache;
 using Discord;
 using Discord.WebSocket;
 using NCrontab;
@@ -56,9 +55,6 @@ namespace StarBot {
         }
         public async Task databaseUpdate(DiscordSocketClient client, Database data, ulong guildID) {
             await data.updateDB(guildID);
-            /*if (!Config.DEBUG_MODE) {
-                await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB(guildID); });
-            }*/
         }
 
         public async Task addInvokeCommand(SocketGuild? guild, Watcher watcher) {
@@ -98,9 +94,9 @@ namespace StarBot {
                 scheduledTaskInvoke.Build(),
                 scheduledTaskSetup.Build()
             });*/
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, report.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, scheduledTaskInvoke.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, scheduledTaskSetup.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, guild.Id, report.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, guild.Id, scheduledTaskInvoke.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, guild.Id, scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);

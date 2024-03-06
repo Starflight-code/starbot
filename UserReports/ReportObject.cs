@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-using Flurl;
 
 namespace StarBot.UserReports;
 

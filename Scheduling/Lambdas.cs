@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 
