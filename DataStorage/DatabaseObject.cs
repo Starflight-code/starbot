@@ -44,6 +44,10 @@ namespace StarBot {
             return data.Keys.ToArray();
         }
 
+        public string[] getAllValues() {
+            return data.Values.ToArray();
+        }
+
 
 
         public bool populateSelf(ulong guildID) {

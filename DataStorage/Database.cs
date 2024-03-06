@@ -63,6 +63,17 @@ namespace StarBot {
             if (targetDatabase == null) { return default; }
             return targetDatabase.getAllKeys();
         }
+        public string[]? getValues(ulong guildID) {
+            guildDatabases.TryGetValue(guildID, out DatabaseObject? targetDatabase);
+            if (targetDatabase == null) { return default; }
+            return targetDatabase.getAllValues();
+        }
+
+        public string[]? getValues(string identifier) {
+            otherDatabases.TryGetValue(identifier, out DatabaseObject? targetDatabase);
+            if (targetDatabase == null) { return default; }
+            return targetDatabase.getAllValues();
+        }
         public void removeValue(string key, ulong guildID) {
             key = Validation.preProcessValue(key);
             guildDatabases.TryGetValue(guildID, out DatabaseObject? targetDatabase);
