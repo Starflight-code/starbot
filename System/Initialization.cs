@@ -30,11 +30,6 @@ public static class Initialization {
 
         try {
             await guild.DeleteApplicationCommandsAsync();
-            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
-                dbkeymodify.Build(),
-                dbkeyremove.Build(),
-                setupChannels.Build()
-            });*/
             watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, guild.Id, dbkeymodify.Build());
             watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, guild.Id, dbkeyremove.Build());
             watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, guild.Id, setupChannels.Build());
