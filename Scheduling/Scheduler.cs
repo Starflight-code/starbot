@@ -57,7 +57,7 @@ namespace StarBot {
             await data.updateDB(guildID);
         }
 
-        public async Task addInvokeCommand(SocketGuild? guild, Watcher watcher) {
+        public async Task addInvokeCommand(SocketGuild? guild, Database data, Watcher watcher) {
             var report = new MessageCommandBuilder();
             var scheduledTaskInvoke = new SlashCommandBuilder();
             var scheduledTaskSetup = new SlashCommandBuilder();
@@ -94,9 +94,9 @@ namespace StarBot {
                 scheduledTaskInvoke.Build(),
                 scheduledTaskSetup.Build()
             });*/
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, guild.Id, report.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, guild.Id, scheduledTaskInvoke.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, guild.Id, scheduledTaskSetup.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, guild.Id, data, report.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, guild.Id, data, scheduledTaskInvoke.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, guild.Id, data, scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);

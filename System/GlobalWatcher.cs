@@ -30,14 +30,26 @@ public class Watcher {
             type = CommandType.message;
         }
     }
+    public void initialize(Database data) {
+        data.createDbIfNotExists("watcher");
+        string[]? currentGuilds = data.getKeys("watcher"); // TODO: Compare current data to current guild states, checking which commands exist (use command names?)
+
+    }
     List<Command> registeredCommands = new();
-    public void RegisterCommand(ulong commandID, ulong guildID, SlashCommandProperties? slashData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, Database data, SlashCommandProperties? slashData) {
         registeredCommands.Add(new(commandID, guildID, slashData));
+        string currentData = data.fetchValue(guildID.ToString(), "watcher");
+        data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher");
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
     }
-    public void RegisterCommand(ulong commandID, ulong guildID, MessageCommandProperties? messageData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, Database data, MessageCommandProperties? messageData) {
         registeredCommands.Add(new(commandID, guildID, messageData));
+        string currentData = data.fetchValue(guildID.ToString(), "watcher");
+        data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher");
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
+    }
+    public void FlushCommandsToDisk(Database data) {
+        data.updateDB("watcher");
     }
     public int FindID(ulong commandID) {
         for (int i = 0; i < registeredCommands.Count(); i++) {
