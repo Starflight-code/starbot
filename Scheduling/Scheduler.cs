@@ -136,13 +136,21 @@ namespace StarBot {
                     debugPosition = "Executing Lambdas";
                     for (int i = 0; i < nextUp.Count; i++) {
                         debugPosition = $"Executing Lambdas, on: {getTaskName(nextUp[i])}";
-                        foreach (SocketGuild guild in client.Guilds) {
-                            await tasks[nextUp[i]].lambda.Invoke(client, data, guild.Id, cacheManager);
-                            if (i == 0) {
-                                watcher.CheckCommands(client, guild);
+                        try {
+                            foreach (SocketGuild guild in client.Guilds) {
+                                await tasks[nextUp[i]].lambda.Invoke(client, data, guild.Id, cacheManager);
+                                if (i == 0) {
+                                    watcher.CheckCommands(client, guild);
+                                }
                             }
+                            Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
+
+                        } catch (Exception e) // logs exceptions to Discord
+                        {
+                            var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
+                            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {debugPosition}");
+                            throw;
                         }
-                        Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
                     }
                     foreach (SocketGuild guild in client.Guilds) {
                         debugPosition = $"Database Update: {guild.Name} ({guild.Id})";
