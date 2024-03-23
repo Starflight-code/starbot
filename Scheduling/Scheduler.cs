@@ -117,7 +117,8 @@ namespace StarBot {
             }
             Console.WriteLine("Queued Tasks: " + queued);
         }
-        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager, Watcher watcher) {
+        public async Task
+        schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager, Watcher watcher) {
             string debugPosition = "";
             int guildIndexForRecovery = 0;
             int lambdaIndex = 0;

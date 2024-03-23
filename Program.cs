@@ -9,6 +9,7 @@ namespace StarBot {
         private DiscordSocketClient? client;
         private Database? data;
         MemoryCacheManager cacheManager = new();
+        Watcher watcher = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
             Console.WriteLine(msg.ToString());
@@ -33,8 +34,6 @@ namespace StarBot {
             }
 
             await client.StartAsync(); // client initialization completed
-
-            Watcher watcher = new(data);
 
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
