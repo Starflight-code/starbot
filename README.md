@@ -9,9 +9,9 @@
 ## Build/Deploy Instructions
 - Pull the Repo
 - Edit Configuration File (System/Config.cs)
-- Run: dotnet publish -r linux-x64
-- Run: chmod +x {path to generated executable} (Optional, depending on permissions)
-- Execute generated executable with the Discord Bot Token as an argument (./starbot {bot token})
+- Run: `dotnet publish -r linux-x64`
+- Run: `chmod +x {path to generated executable} (Optional, depending on permissions)`
+- Execute generated executable with the Discord Bot Token as an argument (`./starbot {bot token}`)
 
 ## Information
 This bot was custom built for a Discord server called StarHub. It can

@@ -57,7 +57,7 @@ namespace StarBot {
             await data.updateDB(guildID);
         }
 
-        public async Task addInvokeCommand(SocketGuild? guild, Watcher watcher) {
+        public async Task addInvokeCommand(SocketGuild? guild, Database data, Watcher watcher) {
             var report = new MessageCommandBuilder();
             var scheduledTaskInvoke = new SlashCommandBuilder();
             var scheduledTaskSetup = new SlashCommandBuilder();
@@ -94,9 +94,9 @@ namespace StarBot {
                 scheduledTaskInvoke.Build(),
                 scheduledTaskSetup.Build()
             });*/
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, guild.Id, report.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, guild.Id, scheduledTaskInvoke.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, guild.Id, scheduledTaskSetup.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(report.Build())).Id, guild.Id, data, report.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())).Id, guild.Id, data, scheduledTaskInvoke.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())).Id, guild.Id, data, scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);
@@ -117,8 +117,11 @@ namespace StarBot {
             }
             Console.WriteLine("Queued Tasks: " + queued);
         }
-        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager, Watcher watcher) {
+        public async Task
+        schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager, Watcher watcher) {
             string debugPosition = "";
+            int guildIndexForRecovery = 0;
+            int lambdaIndex = 0;
             try {
                 while (true) {
                     debugPosition = "SetActivity";
@@ -134,15 +137,27 @@ namespace StarBot {
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
                     await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
                     debugPosition = "Executing Lambdas";
+                    List<SocketGuild> guilds = client.Guilds.ToList();
                     for (int i = 0; i < nextUp.Count; i++) {
+                        lambdaIndex = i;
                         debugPosition = $"Executing Lambdas, on: {getTaskName(nextUp[i])}";
-                        foreach (SocketGuild guild in client.Guilds) {
-                            await tasks[nextUp[i]].lambda.Invoke(client, data, guild.Id, cacheManager);
-                            if (i == 0) {
-                                watcher.CheckCommands(client, guild);
+                        try {
+                            for (int j = 0; j < guilds.Count(); j++) {
+                                guildIndexForRecovery = j;
+                                await tasks[nextUp[i]].lambda.Invoke(client, data, guilds[j].Id, cacheManager);
+                                if (i == 0) {
+                                    watcher.CheckCommands(client, guilds[j]);
+                                }
                             }
+                            Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
+
+                        } catch (Exception e) // logs exceptions to Discord
+                        {
+                            var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
+                            bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager);
+                            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {debugPosition}\nRecovery Attempt Succeeded: {attempt.ToString()}");
+                            throw;
                         }
-                        Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
                     }
                     foreach (SocketGuild guild in client.Guilds) {
                         debugPosition = $"Database Update: {guild.Name} ({guild.Id})";

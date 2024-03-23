@@ -1,4 +1,5 @@
 namespace StarBot {
+    // VERSION: 1.0.1-DEV
     internal static class Config {
 
         public struct StatusMessage {

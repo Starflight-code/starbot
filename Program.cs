@@ -9,6 +9,7 @@ namespace StarBot {
         private DiscordSocketClient? client;
         private Database? data;
         MemoryCacheManager cacheManager = new();
+        Watcher watcher = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
             Console.WriteLine(msg.ToString());
@@ -17,7 +18,6 @@ namespace StarBot {
 
 
         public async Task MainAsync(string[] args) {
-            Watcher watcher = new();
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
@@ -39,7 +39,7 @@ namespace StarBot {
                 Console.WriteLine("Bot is connected!");
                 data = new(client);
                 for (int i = 0; i < data.guilds.Count(); i++) {
-                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]), watcher);
+                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]), data, watcher);
                 }
                 ready = true;
             };
@@ -54,7 +54,7 @@ namespace StarBot {
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.DBD_Automation, "Dead by Daylight Automation");
 
             for (int i = 0; i < data.guilds.Count(); i++) {
-                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]), watcher);
+                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]), data, watcher);
             }
 
             if (data == null) { return; }

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -5,6 +6,7 @@ using Newtonsoft.Json;
 using StarBot;
 
 public class Watcher {
+    public List<string> commandIDsMissing = new();
     public struct Command {
         public enum CommandType {
             message,
@@ -30,14 +32,56 @@ public class Watcher {
             type = CommandType.message;
         }
     }
+    public async void initialize(DiscordSocketClient client, Database data) {
+        data.createDbIfNotExists("watcher-id");
+        data.createDbIfNotExists("watcher-name");
+        string[]? currentGuilds = data.getKeys("watcher-id");
+        HashSet<string> guilds = currentGuilds.ToHashSet();
+        List<SocketApplicationCommand> commandsOnDiscord = new();
+        commandIDsMissing.AddRange(data.getKeys("watcher-name"));
+        foreach (string guildID in guilds) {
+            commandsOnDiscord.AddRange(await client.GetGuild(ulong.Parse(guildID)).GetApplicationCommandsAsync());
+        }
+
+        for (int i = 0; i < commandsOnDiscord.Count; i++) {
+            commandIDsMissing.Remove(commandsOnDiscord[i].ApplicationId.ToString());
+        }
+    }
     List<Command> registeredCommands = new();
-    public void RegisterCommand(ulong commandID, ulong guildID, SlashCommandProperties? slashData) {
+    public void RegisterCommand(ulong commandID, ulong guildID, Database data, SlashCommandProperties? slashData) {
         registeredCommands.Add(new(commandID, guildID, slashData));
+        string currentData = data.fetchValue(guildID.ToString(), "watcher-id");
+        data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher-id");
+        data.setValue(commandID.ToString(), slashData.Name.Value + "-S", "watcher-name");
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
     }
-    public void RegisterCommand(ulong commandID, ulong guildID, MessageCommandProperties? messageData) {
+    public void RegisterCommand(ulong guildID, Database data, SlashCommandProperties? slashData) {
+        //registeredCommands.Add(new(commandID, guildID, slashData));
+        //string currentData = data.fetchValue(guildID.ToString(), "watcher");
+        //data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher-id");
+        //data.setValue(commandID.ToString(), slashData.Name.Value + "-S", "watcher-name");
+        //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
+    }
+    public void RegisterCommand(ulong commandID, ulong guildID, Database data, MessageCommandProperties? messageData) {
         registeredCommands.Add(new(commandID, guildID, messageData));
+        string currentData = data.fetchValue(guildID.ToString(), "watcher-id");
+        data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher-id");
+        data.setValue(commandID.ToString(), messageData.Name.Value + "-M", "watcher-name");
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
+    }
+    public void RegisterCommand(DiscordSocketClient client, ulong guildID, Database data, MessageCommandProperties? messageData) {
+        if (commandIDsMissing.Contains(messageData.Name.Value)) { // TODO: Fix invalid logic here, should check for matching names, instead of an array of IDs
+            commandIDsMissing.Remove(messageData.Name.Value);
+            client.GetGuild(guildID).CreateApplicationCommandAsync(messageData); // TODO: add code to fully register command by clearing off stale data and registering command normally
+        }
+        //registeredCommands.Add(new(commandID, guildID, messageData));
+        //string currentData = data.fetchValue(guildID.ToString(), "watcher");
+        //data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher-id");
+        //data.setValue(commandID.ToString(), messageData.Name.Value + "-M", "watcher-name");
+        //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
+    }
+    public void FlushCommandsToDisk(Database data) {
+        data.updateDB("watcher");
     }
     public int FindID(ulong commandID) {
         for (int i = 0; i < registeredCommands.Count(); i++) {

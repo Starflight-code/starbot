@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using StarBot;
 
 public static class Initialization {
-    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Watcher watcher) {
+    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data, Watcher watcher) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
         var setupChannels = new SlashCommandBuilder();
@@ -30,14 +30,9 @@ public static class Initialization {
 
         try {
             await guild.DeleteApplicationCommandsAsync();
-            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
-                dbkeymodify.Build(),
-                dbkeyremove.Build(),
-                setupChannels.Build()
-            });*/
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, guild.Id, dbkeymodify.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, guild.Id, dbkeyremove.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, guild.Id, setupChannels.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, guild.Id, data, dbkeymodify.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, guild.Id, data, dbkeyremove.Build());
+            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, guild.Id, data, setupChannels.Build());
 
 
         } catch (HttpException exception) {
