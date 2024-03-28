@@ -77,6 +77,9 @@ namespace StarBot {
                 case "key-remove":
                     await SlashCommands.keyRemove(command, client, data);
                     break;
+                case "keys-list":
+                    await SlashCommands.keyList(command, client, data);
+                    break;
                 case "setup-channel":
                     await SlashCommands.setupChannels(command, client, data);
                     break;
