@@ -36,7 +36,22 @@ internal class SlashCommands {
         data.removeValue(key, (ulong)command.GuildId);
         await command.RespondAsync("Changes applied: \"" + key + "\" - REMOVED" + "\nChanges will sync immediately.", ephemeral: true);
         await data.updateDB((ulong)command.GuildId);
-        await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB((ulong)command.GuildId); });
+    }
+    public static async Task keyList(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+        if (command.GuildId == null) { return; }
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+            return;
+        } // permission check
+
+        string[]? keys = data.getKeys((ulong)command.GuildId);
+        string output = "";
+        for (int i = 0; i < keys.Length; i++) {
+            string value = data.fetchValue(keys[i], (ulong)command.GuildId);
+            if (i != 0) { output += "\n- "; }
+            output += $"{keys[i]} - {value}";
+        }
+
+        await command.RespondAsync("Keys associated with the current guild: \n" + output, ephemeral: true);
     }
     public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
         if (command.GuildId == null) { return; }
