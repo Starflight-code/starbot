@@ -20,8 +20,8 @@ public static class Initialization {
         dbkeyremove.WithDescription("Remove a key value pair in the database");
         dbkeyremove.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to remove", isRequired: true);
 
-        dbkeyremove.WithName("keys-list");
-        dbkeyremove.WithDescription("List all key-value pairs for this guild");
+        dbkeylist.WithName("keys-list");
+        dbkeylist.WithDescription("List all key-value pairs for this guild");
 
         setupChannels.WithName("setup-channel");
         setupChannels.WithDescription("Associate systems with log channels to make them work.");
