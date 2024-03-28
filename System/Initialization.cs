@@ -8,6 +8,7 @@ public static class Initialization {
     public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data/*, Watcher watcher*/) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
+        var dbkeylist = new SlashCommandBuilder();
         var setupChannels = new SlashCommandBuilder();
 
         dbkeymodify.WithName("key-modify");
@@ -18,6 +19,9 @@ public static class Initialization {
         dbkeyremove.WithName("key-remove");
         dbkeyremove.WithDescription("Remove a key value pair in the database");
         dbkeyremove.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to remove", isRequired: true);
+
+        dbkeyremove.WithName("keys-list");
+        dbkeyremove.WithDescription("List all key-value pairs for this guild");
 
         setupChannels.WithName("setup-channel");
         setupChannels.WithDescription("Associate systems with log channels to make them work.");
@@ -34,6 +38,7 @@ public static class Initialization {
             await guild.CreateApplicationCommandAsync(dbkeymodify.Build())/*).Id, guild.Id, data, dbkeymodify.Build())*/;
             /*watcher.RegisterCommand((*/
             await guild.CreateApplicationCommandAsync(dbkeyremove.Build())/*).Id, guild.Id, data, dbkeyremove.Build())*/;
+            await guild.CreateApplicationCommandAsync(dbkeylist.Build());
             /*watcher.RegisterCommand((*/
             await guild.CreateApplicationCommandAsync(setupChannels.Build())/*).Id, guild.Id, data, setupChannels.Build())*/;
 
