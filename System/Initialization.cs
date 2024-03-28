@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using StarBot;
 
 public static class Initialization {
-    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data, Watcher watcher) {
+    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data/*, Watcher watcher*/) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
         var setupChannels = new SlashCommandBuilder();
@@ -29,10 +29,13 @@ public static class Initialization {
             .WithType(ApplicationCommandOptionType.Integer));
 
         try {
-            await guild.DeleteApplicationCommandsAsync();
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeymodify.Build())).Id, guild.Id, data, dbkeymodify.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(dbkeyremove.Build())).Id, guild.Id, data, dbkeyremove.Build());
-            watcher.RegisterCommand((await guild.CreateApplicationCommandAsync(setupChannels.Build())).Id, guild.Id, data, setupChannels.Build());
+            await guild.DeleteApplicationCommandsAsync(); // disabled global watcher system, pending full removal (too complex for current project)
+            /*watcher.RegisterCommand((*/
+            await guild.CreateApplicationCommandAsync(dbkeymodify.Build())/*).Id, guild.Id, data, dbkeymodify.Build())*/;
+            /*watcher.RegisterCommand((*/
+            await guild.CreateApplicationCommandAsync(dbkeyremove.Build())/*).Id, guild.Id, data, dbkeyremove.Build())*/;
+            /*watcher.RegisterCommand((*/
+            await guild.CreateApplicationCommandAsync(setupChannels.Build())/*).Id, guild.Id, data, setupChannels.Build())*/;
 
 
         } catch (HttpException exception) {
