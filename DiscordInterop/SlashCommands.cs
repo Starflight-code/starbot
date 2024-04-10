@@ -46,7 +46,7 @@ internal class SlashCommands {
         string[]? keys = data.getKeys((ulong)command.GuildId);
         string output = "";
         for (int i = 0; i < keys.Length; i++) {
-            string value = data.fetchValue(keys[i], (ulong)command.GuildId);
+            string? value = data.fetchValue(keys[i], (ulong)command.GuildId);
             if (i != 0) { output += "\n- "; }
             output += $"{keys[i]} - {value}";
         }
