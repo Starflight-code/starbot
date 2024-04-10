@@ -1,20 +1,20 @@
 ﻿using Newtonsoft.Json;
 
 namespace StarBot {
-    internal class DatabaseObject {
-        private Dictionary<string, string> data;
+    internal class DatabaseObject<T> {
+        private Dictionary<string, T?> data;
         public DatabaseObject(ulong guildID) {
-            data = new Dictionary<string, string>();
+            data = new Dictionary<string, T?>();
             populateSelf(guildID);
         }
         public DatabaseObject(string identifier) {
-            data = new Dictionary<string, string>();
+            data = new Dictionary<string, T?>();
             populateSelf(identifier);
         }
-        public bool equals(DatabaseObject otherObject) {
+        public bool equals(DatabaseObject<T> otherObject) {
             return otherObject.data.Equals(data);
         }
-        public void add(string key, string value) {
+        public void add(string key, T value) {
             try {
                 data.Add(key, value);
             } catch (ArgumentException) {
@@ -29,22 +29,22 @@ namespace StarBot {
         public void clear() {
             data.Clear();
         }
-        public string get(string key) {
-            data.TryGetValue(key, out string? value);
+        public T? get(string key) {
+            data.TryGetValue(key, out T? value);
             if (value == null) {
-                return "";
+                return default;
             }
             return value;
         }
         public bool doesKeyExist(string key) {
-            return data.TryGetValue(key, out string? _);
+            return data.TryGetValue(key, out T? _);
         }
 
         public string[] getAllKeys() {
             return data.Keys.ToArray();
         }
 
-        public string[] getAllValues() {
+        public T?[] getAllValues() {
             return data.Values.ToArray();
         }
 
@@ -56,14 +56,14 @@ namespace StarBot {
             };
 
             string dbString = File.ReadAllText(Compatiblity.buildPath(Config.DATABASE_DIRECTORY + $"{guildID}.db"));
-            Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(dbString);
+            Dictionary<string, T>? db = JsonConvert.DeserializeObject<Dictionary<string, T>>(dbString);
             if (db == null) {
                 return false;
             }
 
             foreach (string key in db.Keys) {
-                db.TryGetValue(key, out string? value);
-                add(key, value == null ? "" : value); // sets null values to 0 size strings
+                db.TryGetValue(key, out T? value);
+                add(key, value == null ? default : value); // sets null values to 0 size strings
             }
             return true;
         }
@@ -73,27 +73,27 @@ namespace StarBot {
             };
 
             string dbString = File.ReadAllText(Compatiblity.buildPath(Config.DATABASE_DIRECTORY + $"{identifier}.db"));
-            Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(dbString);
+            Dictionary<string, T>? db = JsonConvert.DeserializeObject<Dictionary<string, T>>(dbString);
             if (db == null) {
                 return false;
             }
 
             foreach (string key in db.Keys) {
-                db.TryGetValue(key, out string? value);
-                add(key, value == null ? "" : value); // sets null values to 0 size strings
+                db.TryGetValue(key, out T? value);
+                add(key, value == null ? default : value); // sets null values to 0 size strings
             }
             return true;
         }
         public bool populateSelfSerialized(string serializedJSON) {
-            Dictionary<string, string>? db = JsonConvert.DeserializeObject<Dictionary<string, string>>(serializedJSON);
+            Dictionary<string, T>? db = JsonConvert.DeserializeObject<Dictionary<string, T>>(serializedJSON);
             if (db == null) {
                 return false;
             }
 
             foreach (string key in db.Keys) {
-                db.TryGetValue(key, out string? value);
+                db.TryGetValue(key, out T? value);
                 if (value == null) {
-                    value = "";
+                    value = default;
                 }
                 add(key, value);
             }

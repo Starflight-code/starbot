@@ -50,7 +50,7 @@ public class Watcher {
     List<Command> registeredCommands = new();
     public void RegisterCommand(ulong commandID, ulong guildID, Database data, SlashCommandProperties? slashData) {
         registeredCommands.Add(new(commandID, guildID, slashData));
-        string currentData = data.fetchValue(guildID.ToString(), "watcher-id");
+        string? currentData = data.fetchValue(guildID.ToString(), "watcher-id");
         data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher-id");
         data.setValue(commandID.ToString(), slashData.Name.Value + "-S", "watcher-name");
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(slashData), guildID); TODO: Add in global watcher database sync, to remove the need to re-register commands every launch
@@ -60,7 +60,7 @@ public class Watcher {
             commandNamesMissing.Remove(slashData.Name.Value);
             SocketApplicationCommand command = await client.GetGuild(guildID).CreateApplicationCommandAsync(slashData); // TODO: add code to fully register command by clearing off stale data and registering command normally
             registeredCommands.Add(new(command.Id, guildID, slashData));
-            string currentData = data.fetchValue(guildID.ToString(), "watcher");
+            string? currentData = data.fetchValue(guildID.ToString(), "watcher");
             data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + command.Id.ToString(), "watcher-id");
             data.setValue(command.Id.ToString(), slashData.Name.Value + "-M", "watcher-name");
         }
@@ -72,7 +72,7 @@ public class Watcher {
     }
     public void RegisterCommand(ulong commandID, ulong guildID, Database data, MessageCommandProperties? messageData) {
         registeredCommands.Add(new(commandID, guildID, messageData));
-        string currentData = data.fetchValue(guildID.ToString(), "watcher-id");
+        string? currentData = data.fetchValue(guildID.ToString(), "watcher-id");
         data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + commandID.ToString(), "watcher-id");
         data.setValue(commandID.ToString(), messageData.Name.Value + "-M", "watcher-name");
         //data.setValue(commandID.ToString(), JsonConvert.SerializeObject(messageData), guildID);
@@ -82,7 +82,7 @@ public class Watcher {
             commandNamesMissing.Remove(messageData.Name.Value);
             SocketApplicationCommand command = await client.GetGuild(guildID).CreateApplicationCommandAsync(messageData); // TODO: add code to fully register command by clearing off stale data and registering command normally
             registeredCommands.Add(new(command.Id, guildID, messageData));
-            string currentData = data.fetchValue(guildID.ToString(), "watcher");
+            string? currentData = data.fetchValue(guildID.ToString(), "watcher");
             data.setValue(guildID.ToString(), currentData == "" ? currentData : currentData + "-" + command.Id.ToString(), "watcher-id");
             data.setValue(command.Id.ToString(), messageData.Name.Value + "-M", "watcher-name");
         }
