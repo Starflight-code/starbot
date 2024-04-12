@@ -1,3 +1,4 @@
+using Debug;
 using Discord;
 using Discord.WebSocket;
 using NCrontab;
@@ -122,28 +123,28 @@ namespace StarBot {
         }
         public async Task
         schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
-            string debugPosition = "";
+            DebugComms debug = new();
             int guildIndexForRecovery = 0;
             int lambdaIndex = 0;
             try {
                 while (true) {
-                    debugPosition = "SetActivity";
+                    debug.UpdatePosition("SetActivity");
                     Random random = new();
                     int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
 
                     await client.SetGameAsync(Config.STATUS_MESSAGES[indexOfNextStatus].message, type: Config.STATUS_MESSAGES[indexOfNextStatus].activity);
-                    debugPosition = "findNextUp";
+                    debug.UpdatePosition("findNextUp");
                     findNextUp();
                     logNextUp(client);
 
-                    debugPosition = "delay";
+                    debug.UpdatePosition("delay");
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
                     await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
-                    debugPosition = "Executing Lambdas";
+                    debug.UpdatePosition("Executing Lambdas");
                     List<SocketGuild> guilds = client.Guilds.ToList();
                     for (int i = 0; i < nextUp.Count; i++) {
                         lambdaIndex = i;
-                        debugPosition = $"Executing Lambdas, on: {getTaskName(nextUp[i])}";
+                        debug.UpdatePosition($"Executing Lambdas, on: {getTaskName(nextUp[i])}");
                         try {
                             for (int j = 0; j < guilds.Count(); j++) {
                                 guildIndexForRecovery = j;
@@ -158,19 +159,18 @@ namespace StarBot {
                         {
                             var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
                             bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager);
-                            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {debugPosition}\nRecovery Attempt Succeeded: {attempt.ToString()}");
+                            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nRecovery Attempt Successful: {attempt.ToString()}");
                             throw;
                         }
                     }
                     foreach (SocketGuild guild in client.Guilds) {
-                        debugPosition = $"Database Update: {guild.Name} ({guild.Id})";
+                        debug.UpdatePosition($"Database Update: {guild.Name} ({guild.Id})");
                         await databaseUpdate(client, data, guild.Id);
                     }
                 }
             } catch (Exception e) // logs exceptions to Discord
                     {
-                var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-                await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {debugPosition}");
+                debug.PrintState(client, e);
                 throw;
             }
         }
