@@ -124,7 +124,6 @@ namespace StarBot {
         public async Task
         schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
             DebugComms debug = new();
-            debug.setVerbosity(true);
             int guildIndexForRecovery = 0;
             int lambdaIndex = 0;
             try {

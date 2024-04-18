@@ -46,7 +46,7 @@ namespace StarBot {
         };
 
         public static StatusMessage[] STATUS_MESSAGES = { // extensions to mark as images (can be decoded by Discord)
-            new("the sun rise, and searching for all the horizons just beyond view.", Discord.ActivityType.Watching),
+            new("the sun rise, and seeing all the horizons just beyond view.", Discord.ActivityType.Watching),
             new("for intriguing, high quality content for your server.", Discord.ActivityType.Watching),
             new("urgent reports and keeping your server clean.", Discord.ActivityType.Listening),
             new("days pass by. Wondering if the constant passage of time will pause for even a brief break.", Discord.ActivityType.Watching),
