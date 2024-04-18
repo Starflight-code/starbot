@@ -9,6 +9,7 @@ namespace StarBot {
         private DiscordSocketClient? client;
         private Database? data;
         MemoryCacheManager cacheManager = new();
+        Moderation moderation = new();
         //Watcher watcher = new();
         public static Task Main(string[] args) => new Program().MainAsync(args);
         private Task Log(Discord.LogMessage msg) {
@@ -18,6 +19,8 @@ namespace StarBot {
 
 
         public async Task MainAsync(string[] args) {
+            moderation.HandleChatMessage();
+            await Task.Delay(-1);
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
             client = new DiscordSocketClient(config);
@@ -26,6 +29,7 @@ namespace StarBot {
             }
             client.SlashCommandExecuted += SlashCommandHandler;
             client.MessageCommandExecuted += MessageCommandHandler;
+            client.MessageReceived += MessageHandler;
             if (args.Length > 0 || Config.KEY != "") {
                 await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
@@ -102,6 +106,11 @@ namespace StarBot {
                     await MessageCommands.UserReport(command, client, data);
                     break;
             }
+        }
+
+        private async Task MessageHandler(SocketMessage message) {
+            if (client == null || data == null) { return; }
+            //moderation.HandleChatMessage(message, client, data);
         }
     }
 }
