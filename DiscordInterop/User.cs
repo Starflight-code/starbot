@@ -21,6 +21,18 @@ internal class UserManager {
         var userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
         return userPermissions.Has(Discord.GuildPermission.ManageGuild);
     }
+
+    public static bool isStaff(DiscordSocketClient? client, ulong? guildID, ulong userID) {
+        if (guildID == null) {
+            return false;
+        }
+        var userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
+        return userPermissions.Has(Discord.GuildPermission.ModerateMembers);
+    }
+
+    public static bool isBot(DiscordSocketClient? client, ulong userID) {
+        return client.GetUser(userID).IsBot;
+    }
     public static bool userBlackisted(Database data, ulong? guildID, ulong userID, string command) {
         if (guildID == null) {
             return false;

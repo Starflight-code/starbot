@@ -19,6 +19,7 @@ namespace StarBot {
 
 
         public async Task MainAsync(string[] args) {
+            //moderation.HandleChatMessage();
             //await Task.Delay(-1);
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };

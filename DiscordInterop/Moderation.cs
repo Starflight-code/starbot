@@ -2,14 +2,16 @@ using System.Net;
 using System.Net.Http.Json;
 using Discord;
 using Discord.WebSocket;
+using Flurl;
 using Flurl.Http;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using StarBot;
+using StarBot.DiscordInterop;
 
 class Moderation {
     struct modelSend {
-        public string model = "mistral-openorca";
+        public string model = "solar";//"mistral-openorca";
         public string prompt;
         public string system;
         public bool stream = false;
@@ -31,6 +33,9 @@ class Moderation {
         public ulong eval_duration;
     }
     HttpClient webClient = new();
+
+    HashSet<ulong> seenIDs = new();
+    HashSet<ulong> approvedIDs = new();
     public Moderation() {
     }
     public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
@@ -40,13 +45,21 @@ class Moderation {
 
         ulong guildId = (message.Channel as SocketGuildChannel).Guild.Id;
 
-        if (data.fetchValue("Ai Channel", guildId) == "") {
-            return;
+        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || data.fetchValue("Ai Channel", guildId) == "") {
+            seenIDs.Add(guildId);
+            return; // if server is not AI enabled, do not monitor
+        }
+        seenIDs.Add(guildId);
+        approvedIDs.Add(guildId);
+
+        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id)) {
+            return; // doesn't watch staff or bot spam
         }
 
-        string prompt = "You are a moderator and decide if messages violate rules. " +
+        string prompt = "You are a moderator and decide if messages violate rules.\n" +
         //"Reply with only 0 if the message is compliant or 1 if the message violates the rules." +
-        "Reply with only a list of rules the message violates. Output: \"1, 2, 4\" or \"\"" +
+        "Only respond with a list of violated rule numbers. Example Response: \"1, 3, 7\" or \"2, 4\"\n" +
+        "Respond with \"\" if no rules are violated." +
         "\n" +
         "Rules:\n" +
         "1: Show kindness to everyone\n" +
@@ -55,11 +68,12 @@ class Moderation {
         "4: Don't participate in fraudulent activity\n" +
         "5: Advertisements are not allowed\n" +
         "6: Post content in appropriate channels\n" +
-        "7: Do not discuss moderation action in public channels\n" +
-        "8: English Only\n" +
-        "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch";
+        "7: Don't discuss moderation actions (warns, mutes, bans) or appeals\n" +
+        "8: No non-english allowed\n" +
+        "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch" +
+        "Respond only with rule numbers or \"\" if no rules are violated.";
         await Task.Run(async () => {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate"); //\"{message.CleanContent}\"
             var content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
             request.Content = content;
             var response = await webClient.SendAsync(request);
@@ -67,21 +81,22 @@ class Moderation {
             //Console.WriteLine(await response.Content.ReadAsStringAsync());
             modelOutput json = JsonConvert.DeserializeObject<modelOutput>(await response.Content.ReadAsStringAsync());
             //Console.WriteLine($"Output: {output.response}");
-            string[] output = json.response.Trim().Replace("\\", "").Replace("\"", "").Split(',');
-            List<int> returnVal = new();
+            char[] output = json.response.Trim().ToCharArray();
+            HashSet<int> returnVal = new();
             for (int i = 0; i < output.Length; i++) {
                 try {
-                    returnVal.Add(int.Parse(output[i].Trim()));
+                    if (output[i] == '(') { break; }
+                    returnVal.Add(int.Parse(output[i].ToString()));
                 } catch { }
             }
-            //Console.WriteLine(returnVal.ToString());
-
+            //Console.WriteLine(returnVal.ToArray());
+            handleAIModeration(returnVal, guildId, message, client, data);
 
         });
     }
 
-    private void handleAIModeration(int[] results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data) {
-        if (results.Length == 0) {
+    private void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data) {
+        if (results.Count == 0) {
             return;
         }
         SocketGuild guild = client.GetGuild(guildId);
