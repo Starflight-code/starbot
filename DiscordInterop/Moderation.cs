@@ -39,6 +39,7 @@ class Moderation {
     public Moderation() {
     }
     public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
+        //Console.WriteLine($"Message Recieved {message.CleanContent}");
         if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
@@ -51,14 +52,15 @@ class Moderation {
         }
         seenIDs.Add(guildId);
         approvedIDs.Add(guildId);
+        //Console.WriteLine("Valid Guild");
 
-        if (message.Author.IsBot) {
-            return;
+        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id)) {
+            return; // doesn't watch staff or bot spam
         }
-        //if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id))
-        //{
-        //    return; // doesn't watch staff or bot spam
-        //}
+
+        if (message.CleanContent.Trim() == "") {
+            return; // null messages can't be scanned
+        }
 
         string prompt = "You are a moderator and decide if messages violate rules. Only mark a message as a rule violation if you're confident.\n" +
         //"Reply with only 0 if the message is compliant or 1 if the message violates the rules." +
@@ -78,13 +80,22 @@ class Moderation {
         "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch";// +
         //"Respond only with rule numbers or \"\" if no rules are violated.";
         await Task.Run(async () => {
+            //Console.WriteLine("Starting AI Processing...");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate"); //\"{message.CleanContent}\"
             var content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
             request.Content = content;
-            var response = await webClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            webClient.Timeout = TimeSpan.FromMinutes(10);
+            HttpResponseMessage response = await webClient.SendAsync(request);
+            try {
+                //Console.WriteLine($"Status: {response.StatusCode}");
+                response.EnsureSuccessStatusCode();
+            } catch {
+                //Console.WriteLine("Error, HTTP Request Failed (AI)");
+                return;
+            }
             //Console.WriteLine(await response.Content.ReadAsStringAsync());
             modelOutput json = JsonConvert.DeserializeObject<modelOutput>(await response.Content.ReadAsStringAsync());
+            //Console.WriteLine($"Finished with: {json.response}");
             //Console.WriteLine($"Output: {output.response}");
             char[] output = json.response.Trim().ToCharArray();
             HashSet<int> returnVal = new();
@@ -105,6 +116,7 @@ class Moderation {
             return;
         }
         SocketGuild guild = client.GetGuild(guildId);
+        //Console.WriteLine("Pushing to output channel");
         guild.GetTextChannel(ulong.Parse(data.fetchValue("Ai Channel", guildId))).SendMessageAsync($"User: {message.Author.Username} Potential Violations: {string.Join(", ", results)} {message.GetJumpUrl()}\n ```{message.CleanContent}```");
     }
 

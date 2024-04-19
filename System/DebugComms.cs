@@ -20,9 +20,9 @@ class DebugComms {
     public async void PrintState(DiscordSocketClient client, Exception e) {
         if (client.ConnectionState == ConnectionState.Connected) {
             var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
+            await channel.SendMessageAsync($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
         } else {
-            Console.WriteLine($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
+            Console.WriteLine($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
         }
     }
 }

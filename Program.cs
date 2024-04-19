@@ -113,6 +113,7 @@ namespace StarBot {
         private async Task MessageHandler(SocketMessage message) {
             if (client == null || data == null) { return; }
             await moderation.HandleChatMessage(message, client, data);
+            //Console.WriteLine("Handler Exit (AI)");
         }
     }
 }
