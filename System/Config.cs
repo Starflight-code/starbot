@@ -48,7 +48,7 @@ namespace StarBot {
             new("the sun rise, and searching for all the horizons just beyond view.", Discord.ActivityType.Watching),
             new("for intriguing, high quality content for your server.", Discord.ActivityType.Watching),
             new("urgent reports and keeping your server clean.", Discord.ActivityType.Listening),
-            new("days pass by. Wondering if the constant passage of time will pause for even a brief break.", Discord.ActivityType.Watching),
+            new("days pass by. Wondering if the constant passage of time will pause for even a moment.", Discord.ActivityType.Watching),
             new("feedback and growing into a better bot.", Discord.ActivityType.Listening),
             new("for the next day, and glacing up the the sunrise, marking the beginning.", Discord.ActivityType.Watching)
         };
