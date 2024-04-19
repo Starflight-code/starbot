@@ -1,17 +1,12 @@
-using System.Net;
-using System.Net.Http.Json;
 using Discord;
 using Discord.WebSocket;
-using Flurl;
-using Flurl.Http;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using StarBot;
 using StarBot.DiscordInterop;
 
 class Moderation {
     struct modelSend {
-        public string model = "mistral-openorca";//"solar";
+        public string model = "mistral-openorca";
         public string prompt;
         public string system;
         public bool stream = false;
@@ -37,9 +32,10 @@ class Moderation {
     HashSet<ulong> seenIDs = new();
     HashSet<ulong> approvedIDs = new();
     public Moderation() {
+        webClient.Timeout = TimeSpan.FromMinutes(10);
     }
     public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
-        //Console.WriteLine($"Message Recieved {message.CleanContent}");
+        Console.WriteLine($"Message Recieved {message.CleanContent}");
         if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
@@ -54,7 +50,7 @@ class Moderation {
         approvedIDs.Add(guildId);
         //Console.WriteLine("Valid Guild");
 
-        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id)) {
+        if (/*UserManager.isStaff(client, guildId, message.Author.Id) || */UserManager.isBot(client, message.Author.Id)) {
             return; // doesn't watch staff or bot spam
         }
 
@@ -62,29 +58,29 @@ class Moderation {
             return; // null messages can't be scanned
         }
 
-        string prompt = "You are a moderator and decide if messages violate rules. Only mark a message as a rule violation if you're confident.\n" +
+        string prompt = "You are a moderator and decide if messages violate rules. " +
+        "Only mark a message as a rule violation if you're confident that the violation is present.\n" +
         //"Reply with only 0 if the message is compliant or 1 if the message violates the rules." +
-        "Respond only with a list of violated rules or \"\" if no rules are violated.\n" +
+        "Respond only with a list of violated rule numbers or \"\" if no rules are violated.\n" +
         "Example Response: \"1, 3, 7\" or \"2, 4\"\n" +
         //"Respond with \"\" if no rules are violated." +
         "\n" +
         "Rules:\n" +
-        "1: Show kindness to everyone\n" +
+        "1: Don't be excessively mean\n" +
         "2: Don't use explicit language, adult content or phrases\n" +
-        "3: Don't share personal/sensitive information\n" +
+        "3: No personally identifiable information allowed\n" +
         "4: Don't participate in fraudulent activity\n" +
         "5: Advertisements are not allowed\n" +
         "6: Post content in appropriate channels\n" +
         "7: Don't discuss moderation actions (warns, mutes, bans) or appeals\n" +
         "8: No non-english allowed\n" +
         "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch";// +
-        //"Respond only with rule numbers or \"\" if no rules are violated.";
+                                                                                              //"Respond only with rule numbers or \"\" if no rules are violated.";
         await Task.Run(async () => {
             //Console.WriteLine("Starting AI Processing...");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate"); //\"{message.CleanContent}\"
-            var content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
-            request.Content = content;
-            webClient.Timeout = TimeSpan.FromMinutes(10);
+            request.Content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
+
             HttpResponseMessage response = await webClient.SendAsync(request);
             try {
                 //Console.WriteLine($"Status: {response.StatusCode}");
