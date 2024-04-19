@@ -23,6 +23,8 @@ namespace StarBot {
             //await Task.Delay(-1);
             bool ready = false;
             var config = new DiscordSocketConfig { MessageCacheSize = 5 };
+            GatewayIntents intent = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent;
+            config.GatewayIntents = intent;
             client = new DiscordSocketClient(config);
             if (Config.DISCORD_NET_LOGGING) { // only handles the log event if logging is enabled
                 client.Log += Log;

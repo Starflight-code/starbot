@@ -9,22 +9,18 @@ using Newtonsoft.Json;
 using StarBot;
 using StarBot.DiscordInterop;
 
-class Moderation
-{
-    struct modelSend
-    {
+class Moderation {
+    struct modelSend {
         public string model = "mistral-openorca";//"solar";
         public string prompt;
         public string system;
         public bool stream = false;
-        public modelSend(string systemPrompt, string prompt)
-        {
+        public modelSend(string systemPrompt, string prompt) {
             system = systemPrompt;
             this.prompt = prompt;
         }
     }
-    struct modelOutput
-    {
+    struct modelOutput {
         public string model;
         public DateTime created_at;
         public string response;
@@ -40,35 +36,35 @@ class Moderation
 
     HashSet<ulong> seenIDs = new();
     HashSet<ulong> approvedIDs = new();
-    public Moderation()
-    {
+    public Moderation() {
     }
-    public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data)
-    {
-        if (message.Channel.GetType() != typeof(SocketGuildChannel))
-        {
+    public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
+        if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
 
         ulong guildId = (message.Channel as SocketGuildChannel).Guild.Id;
 
-        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || data.fetchValue("Ai Channel", guildId) == "")
-        {
+        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || data.fetchValue("Ai Channel", guildId) == "") {
             seenIDs.Add(guildId);
             return; // if server is not AI enabled, do not monitor
         }
         seenIDs.Add(guildId);
         approvedIDs.Add(guildId);
 
-        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id))
-        {
-            return; // doesn't watch staff or bot spam
+        if (message.Author.IsBot) {
+            return;
         }
+        //if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id))
+        //{
+        //    return; // doesn't watch staff or bot spam
+        //}
 
-        string prompt = "You are a moderator and decide if messages violate rules.\n" +
+        string prompt = "You are a moderator and decide if messages violate rules. Only mark a message as a rule violation if you're confident.\n" +
         //"Reply with only 0 if the message is compliant or 1 if the message violates the rules." +
-        "Only respond with a list of violated rule numbers. Example Response: \"1, 3, 7\" or \"2, 4\"\n" +
-        "Respond with \"\" if no rules are violated." +
+        "Respond only with a list of violated rules or \"\" if no rules are violated.\n" +
+        "Example Response: \"1, 3, 7\" or \"2, 4\"\n" +
+        //"Respond with \"\" if no rules are violated." +
         "\n" +
         "Rules:\n" +
         "1: Show kindness to everyone\n" +
@@ -79,10 +75,9 @@ class Moderation
         "6: Post content in appropriate channels\n" +
         "7: Don't discuss moderation actions (warns, mutes, bans) or appeals\n" +
         "8: No non-english allowed\n" +
-        "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch" +
-        "Respond only with rule numbers or \"\" if no rules are violated.";
-        await Task.Run(async () =>
-        {
+        "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch";// +
+        //"Respond only with rule numbers or \"\" if no rules are violated.";
+        await Task.Run(async () => {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate"); //\"{message.CleanContent}\"
             var content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
             request.Content = content;
@@ -93,14 +88,11 @@ class Moderation
             //Console.WriteLine($"Output: {output.response}");
             char[] output = json.response.Trim().ToCharArray();
             HashSet<int> returnVal = new();
-            for (int i = 0; i < output.Length; i++)
-            {
-                try
-                {
+            for (int i = 0; i < output.Length; i++) {
+                try {
                     if (output[i] == '(') { break; }
                     returnVal.Add(int.Parse(output[i].ToString()));
-                }
-                catch { }
+                } catch { }
             }
             //Console.WriteLine(returnVal.ToArray());
             handleAIModeration(returnVal, guildId, message, client, data);
@@ -108,10 +100,8 @@ class Moderation
         });
     }
 
-    private void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data)
-    {
-        if (results.Count == 0)
-        {
+    private void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data) {
+        if (results.Count == 0) {
             return;
         }
         SocketGuild guild = client.GetGuild(guildId);
