@@ -28,14 +28,16 @@ class Moderation {
         public ulong eval_duration;
     }
     HttpClient webClient = new();
-
+    Mutex ollamaHold;
+    int numberOfProcesses = 0;
     HashSet<ulong> seenIDs = new();
     HashSet<ulong> approvedIDs = new();
     public Moderation() {
         webClient.Timeout = TimeSpan.FromMinutes(10);
+        ollamaHold = new Mutex(false, "Ollama API");
     }
     public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
-        Console.WriteLine($"Message Recieved {message.CleanContent}");
+        //Console.WriteLine($"Message Recieved {message.CleanContent}");
         if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
@@ -50,7 +52,7 @@ class Moderation {
         approvedIDs.Add(guildId);
         //Console.WriteLine("Valid Guild");
 
-        if (/*UserManager.isStaff(client, guildId, message.Author.Id) || */UserManager.isBot(client, message.Author.Id)) {
+        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id)) {
             return; // doesn't watch staff or bot spam
         }
 
@@ -75,8 +77,14 @@ class Moderation {
         "7: Don't discuss moderation actions (warns, mutes, bans) or appeals\n" +
         "8: No non-english allowed\n" +
         "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch";// +
-                                                                                              //"Respond only with rule numbers or \"\" if no rules are violated.";
+        //"Respond only with rule numbers or \"\" if no rules are violated.";
         await Task.Run(async () => {
+            numberOfProcesses++; // may cause a race condition, probably not (edge case)
+            bool aquired = ollamaHold.WaitOne(TimeSpan.FromMinutes(10));
+            if (!aquired) {
+                (client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync("Could not aquire mutex lock within 10 minutes... overloaded or broken?\nWaiting: " + numberOfProcesses);
+                return;
+            }
             //Console.WriteLine("Starting AI Processing...");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate"); //\"{message.CleanContent}\"
             request.Content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
@@ -89,6 +97,8 @@ class Moderation {
                 //Console.WriteLine("Error, HTTP Request Failed (AI)");
                 return;
             }
+            ollamaHold.ReleaseMutex();
+            numberOfProcesses--;
             //Console.WriteLine(await response.Content.ReadAsStringAsync());
             modelOutput json = JsonConvert.DeserializeObject<modelOutput>(await response.Content.ReadAsStringAsync());
             //Console.WriteLine($"Finished with: {json.response}");
@@ -103,7 +113,6 @@ class Moderation {
             }
             //Console.WriteLine(returnVal.ToArray());
             handleAIModeration(returnVal, guildId, message, client, data);
-
         });
     }
 

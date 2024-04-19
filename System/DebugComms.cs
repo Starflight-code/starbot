@@ -17,7 +17,7 @@ class DebugComms {
     public void setVerbosity(bool verbose) {
         this.verbose = verbose;
     }
-    public async void PrintState(DiscordSocketClient client, Exception e) {
+    public async void LogState(DiscordSocketClient client, Exception e) {
         if (client.ConnectionState == ConnectionState.Connected) {
             var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
             await channel.SendMessageAsync($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");

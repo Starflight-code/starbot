@@ -121,8 +121,7 @@ namespace StarBot {
             }
             Console.WriteLine("Queued Tasks: " + queued);
         }
-        public async Task
-        schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
+        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
             DebugComms debug = new();
             debug.setVerbosity(true);
             int guildIndexForRecovery = 0;
@@ -171,7 +170,7 @@ namespace StarBot {
                 }
             } catch (Exception e) // logs exceptions to Discord
                     {
-                debug.PrintState(client, e);
+                debug.LogState(client, e);
                 throw;
             }
         }
