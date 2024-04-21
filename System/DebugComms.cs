@@ -11,7 +11,7 @@ class DebugComms {
     public void UpdatePosition(string newPosition) {
         position = newPosition;
         if (verbose) {
-            Console.WriteLine($"{DateTime.Now.ToString()}: \nReached Position: {position}");
+            Console.WriteLine($"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Reached Position: {position}");
         }
     }
     public void setVerbosity(bool verbose) {

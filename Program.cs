@@ -64,7 +64,12 @@ namespace StarBot {
             }
 
             if (data == null) { return; }
-            await scheduler.schedulerProcess(client, data, cacheManager/*, watcher*/);
+            try {
+                await scheduler.schedulerProcess(client, data, cacheManager/*, watcher*/);
+            } catch (Exception e) {
+                Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " Error: " + e.Message + "\n" + e.StackTrace);
+                throw;
+            }
             await Task.Delay(-1);
         }
 
