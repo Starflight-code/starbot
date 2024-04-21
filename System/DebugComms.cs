@@ -18,11 +18,8 @@ class DebugComms {
         this.verbose = verbose;
     }
     public async void LogState(DiscordSocketClient client, Exception e) {
-        if (client.ConnectionState == ConnectionState.Connected) {
-            var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-            await channel.SendMessageAsync($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
-        } else {
-            Console.WriteLine($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
-        }
+        var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
+        await channel.SendMessageAsync($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
+        Console.WriteLine($"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}");
     }
 }

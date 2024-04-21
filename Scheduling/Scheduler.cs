@@ -90,17 +90,9 @@ namespace StarBot {
                 setupBuilder.AddChoice(tasks[i].name, i);
             }
             scheduledTaskSetup.AddOption(setupBuilder);
-            /*await guild.BulkOverwriteApplicationCommandAsync(new ApplicationCommandProperties[] {
-                report.Build(),
-                scheduledTaskInvoke.Build(),
-                scheduledTaskSetup.Build()
-            });*/
-            /*watcher.RegisterCommand((*/
-            await guild.CreateApplicationCommandAsync(report.Build())/*).Id, guild.Id, data, report.Build())*/;
-            /*watcher.RegisterCommand((*/
-            await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build())/*).Id, guild.Id, data, scheduledTaskInvoke.Build())*/;
-            /*watcher.RegisterCommand((*/
-            await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build())/*).Id, guild.Id, data, scheduledTaskSetup.Build())*/;
+            await guild.CreateApplicationCommandAsync(report.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
+            await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);
@@ -149,17 +141,15 @@ namespace StarBot {
                             for (int j = 0; j < guilds.Count(); j++) {
                                 guildIndexForRecovery = j;
                                 await tasks[nextUp[i]].lambda.Invoke(client, data, guilds[j].Id, cacheManager);
-                                /*if (i == 0) {
-                                    watcher.CheckCommands(client, guilds[j]);
-                                }*/
                             }
                             Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
 
                         } catch (Exception e) // logs exceptions to Discord
                         {
-                            var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-                            bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager);
-                            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nRecovery Attempt Successful: {attempt.ToString()}");
+                            debug.LogState(client, e);
+                            //var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
+                            //bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager);
+                            //await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nRecovery Attempt Successful: {attempt.ToString()}");
                             throw;
                         }
                     }
