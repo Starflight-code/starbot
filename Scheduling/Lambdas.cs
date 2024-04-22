@@ -10,7 +10,7 @@ namespace StarBot {
 
             string url = "https://xkcd.com/info.0.json";
             JObject json = WebManager.FetchJSON(url);
-            var channel = client.GetChannel(ulong.Parse(data.fetchValue("XKCD Channel", guildID))) as SocketTextChannel;
+            SocketTextChannel? channel = client.GetChannel(ulong.Parse(data.fetchValue("XKCD Channel", guildID) ?? "0")) as SocketTextChannel;
 
             if (channel == null) {
                 await data.setValue("XKCD Channel", "", guildID, true);
@@ -35,7 +35,7 @@ namespace StarBot {
 
             await data.initializeIterator("CatNumber", guildID, 1);
 
-            var channel = client.GetChannel(ulong.Parse(data.fetchValue("Cat Channel", guildID))) as SocketTextChannel;
+            SocketTextChannel? channel = client.GetChannel(ulong.Parse(data.fetchValue("Cat Channel", guildID) ?? "0")) as SocketTextChannel;
 
             if (channel == null) {
                 await data.setValue("Cat Channel", "", guildID, true);
@@ -69,7 +69,7 @@ namespace StarBot {
 
             await data.initializeIterator("DBDNumber", guildID, 1);
 
-            var channel = client.GetChannel(ulong.Parse(data.fetchValue("DBD Channel", guildID))) as SocketTextChannel;
+            SocketTextChannel? channel = client.GetChannel(ulong.Parse(data.fetchValue("DBD Channel", guildID) ?? "0")) as SocketTextChannel;
 
             if (channel == null) {
                 await data.setValue("DBD Channel", "", guildID, true);
@@ -118,7 +118,7 @@ namespace StarBot {
             await data.initializeIterator("AnimeNumber", guildID, 1);
             await data.setValue("lastAnimeIDs", WebManager.AddNewPostID(data.fetchValue("lastanimeIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
-            var channel = client.GetChannel(ulong.Parse(data.fetchValue("Anime Channel", guildID))) as SocketTextChannel;
+            SocketTextChannel? channel = client.GetChannel(ulong.Parse(data.fetchValue("Anime Channel", guildID) ?? "0")) as SocketTextChannel;
 
             if (channel == null) {
                 await data.setValue("Anime Channel", "", guildID, true);
@@ -147,7 +147,7 @@ namespace StarBot {
             await data.initializeIterator("QuestionNumber", guildID, 1);
             await data.setValue("lastQuestionOfTheDayIDs", WebManager.AddNewPostID(data.fetchValue("lastQuestionOfTheDayIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
-            var channel = client.GetChannel(ulong.Parse(data.fetchValue("QOTD Channel", guildID))) as SocketTextChannel;
+            SocketTextChannel? channel = client.GetChannel(ulong.Parse(data.fetchValue("QOTD Channel", guildID) ?? "0")) as SocketTextChannel;
 
             if (channel == null) {
                 await data.setValue("QOTD Channel", "", guildID, true);
@@ -176,7 +176,7 @@ namespace StarBot {
             await data.initializeIterator("AnimemesNumber", guildID, 1);
             await data.setValue("lastAnimemesIDs", WebManager.AddNewPostID(data.fetchValue("lastAnimemesIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
-            var channel = client.GetChannel(ulong.Parse(data.fetchValue("AniMemes Channel", guildID))) as SocketTextChannel;
+            SocketTextChannel? channel = client.GetChannel(ulong.Parse(data.fetchValue("AniMemes Channel", guildID) ?? "0")) as SocketTextChannel;
 
             if (channel == null) {
                 await data.setValue("AniMemes Channel", "", guildID, true);

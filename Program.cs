@@ -116,7 +116,7 @@ namespace StarBot {
         }
 
         private async Task MessageHandler(SocketMessage message) {
-            if (client == null || data == null) { return; }
+            if (client == null || data == null || data.fetchValue("ActiveScheduling", "0") == "1") { return; }
             await moderation.HandleChatMessage(message, client, data);
             //Console.WriteLine("Handler Exit (AI)");
         }

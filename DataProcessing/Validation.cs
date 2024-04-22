@@ -32,7 +32,12 @@ static class Validation {
             return false;
         }
         debug.SetSubPosition("Check History", 1);
-        string[] postIDs = postIDHistory.Split(",");
+        string[] postIDs;
+        try {
+            postIDs = postIDHistory.Split(",");
+        } catch (NullReferenceException) {
+            return true;
+        }
         string currentPostID = GeneratePostID(post);
         for (int i = 0; i < postIDs.Length; i++) {
             if (currentPostID == postIDs[i]) {

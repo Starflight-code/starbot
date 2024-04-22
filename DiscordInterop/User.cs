@@ -1,3 +1,4 @@
+using Discord;
 using Discord.WebSocket;
 
 namespace StarBot.DiscordInterop;
@@ -26,7 +27,7 @@ internal class UserManager {
         if (guildID == null) {
             return false;
         }
-        var userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
+        GuildPermissions userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
         return userPermissions.Has(Discord.GuildPermission.ModerateMembers);
     }
 

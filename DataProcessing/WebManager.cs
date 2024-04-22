@@ -35,6 +35,7 @@ class WebManager {
 
     public static string AddNewPostID(string postIDString, string newPostID) {
         List<string> postIDs;
+        postIDString ??= ""; // if null, set to ""
         if (postIDString != "") {
             postIDs = postIDString.Split(",").ToList();
         } else {

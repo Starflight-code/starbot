@@ -27,6 +27,7 @@ namespace StarBot {
             tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
+            DateTime now = DateTime.Parse("04/22/2024 11:59:00 PM");//DateTime.Now;
             nextUp.Clear();
             if (Config.DEBUG_MODE) {
                 for (int i = 0; i < tasks.Count; i++) {
@@ -36,13 +37,13 @@ namespace StarBot {
             }
             int soonestIndex = 0;
             for (int i = 0; i < tasks.Count; i++) {
-                if (tasks[i].schedule.GetNextOccurrence(DateTime.Now) < tasks[soonestIndex].schedule.GetNextOccurrence(DateTime.Now)) {
+                if (tasks[i].schedule.GetNextOccurrence(now) < tasks[soonestIndex].schedule.GetNextOccurrence(now)) {
                     soonestIndex = i;
                 }
             }
-            DateTime soonestOccurrence = tasks[soonestIndex].schedule.GetNextOccurrence(DateTime.Now);
+            DateTime soonestOccurrence = tasks[soonestIndex].schedule.GetNextOccurrence(now);
             for (int i = 0; i < tasks.Count; i++) {
-                if (tasks[i].schedule.GetNextOccurrence(DateTime.Now) == soonestOccurrence) {
+                if (tasks[i].schedule.GetNextOccurrence(now) == soonestOccurrence) {
                     nextUp.Add(i);
                 }
             }
@@ -121,6 +122,7 @@ namespace StarBot {
             int lambdaIndex = 0;
             try {
                 while (true) {
+                    data.setValue("ActiveScheduling", "0", "0", true);
                     debug.UpdatePosition("SetActivity");
                     Random random = new();
                     int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
@@ -132,6 +134,7 @@ namespace StarBot {
 
                     debug.UpdatePosition("delay");
                     await Task.Delay(Config.DEBUG_MODE ? 5000 : waitTimeNextUp()); // waits for 5 seconds in debug mode, otherwise waits the correct time.
+                    data.setValue("ActiveScheduling", "1", "0", true);
                     await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
                     debug.UpdatePosition("Executing Lambdas");
                     List<SocketGuild> guilds = client.Guilds.ToList();
