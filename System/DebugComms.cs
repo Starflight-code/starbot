@@ -31,8 +31,10 @@ class DebugComms {
     }
     public async void LogState(DiscordSocketClient client, Exception e) {
         var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
+
         string subPositionConcat = string.Join("", subPositions);
         string message = $"{DateTime.Now}: {e.Message}\n```{e.StackTrace}```\nPosition: {position}\nSubPositions: {subPositionConcat}";
+
         await channel.SendMessageAsync(message);
         Console.WriteLine(message);
     }

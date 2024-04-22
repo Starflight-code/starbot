@@ -3,6 +3,8 @@ using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 
+// NOTICE: This file needs extensive refactoring
+
 namespace StarBot {
     internal class Lambdas {
         public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> XKCD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // XKCD Automation

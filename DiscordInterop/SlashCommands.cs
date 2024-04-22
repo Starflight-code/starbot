@@ -3,7 +3,7 @@ using StarBot.Caching;
 
 namespace StarBot.DiscordInterop;
 internal class SlashCommands {
-    public static async Task keySet(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+    public static async Task KeySet(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
         if (command.GuildId == null) { return; }
 
         if (UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
@@ -20,7 +20,7 @@ internal class SlashCommands {
             await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB((ulong)command.GuildId); });
         }
     }
-    public static async Task keyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+    public static async Task KeyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
         if (command.GuildId == null) { return; }
         if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
             return;
@@ -37,7 +37,7 @@ internal class SlashCommands {
         await command.RespondAsync("Changes applied: \"" + key + "\" - REMOVED" + "\nChanges will sync immediately.", ephemeral: true);
         await data.updateDB((ulong)command.GuildId);
     }
-    public static async Task keyList(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+    public static async Task KeyList(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
         if (command.GuildId == null) { return; }
         if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
             return;
@@ -53,7 +53,7 @@ internal class SlashCommands {
 
         await command.RespondAsync("Keys associated with the current guild: \n" + output, ephemeral: true);
     }
-    public static async Task executeTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
+    public static async Task ExecuteTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
         if (command.GuildId == null) { return; }
         await command.DeferAsync(ephemeral: true);
         if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
@@ -67,7 +67,7 @@ internal class SlashCommands {
         await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
     }
 
-    public static async Task setUpTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
+    public static async Task SetUpTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
         if (command.GuildId == null || command.ChannelId == null) { return; }
         await command.DeferAsync(ephemeral: true);
         if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
@@ -81,7 +81,7 @@ internal class SlashCommands {
         await command.FollowupAsync($"Current channel linked with \"{scheduler.getTaskName(taskIndex)}\".", ephemeral: true);
     }
 
-    public static async Task setupChannels(SocketSlashCommand command, DiscordSocketClient client, Database data) {
+    public static async Task SetupChannels(SocketSlashCommand command, DiscordSocketClient client, Database data) {
         await command.DeferAsync(ephemeral: true);
         var commandArgs = command.Data.Options.ToArray();
         int argument = unchecked((int)(Int64)commandArgs[0].Value);

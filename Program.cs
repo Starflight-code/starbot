@@ -29,9 +29,11 @@ namespace StarBot {
             if (Config.DISCORD_NET_LOGGING) { // only handles the log event if logging is enabled
                 client.Log += Log;
             }
+
             client.SlashCommandExecuted += SlashCommandHandler;
             client.MessageCommandExecuted += MessageCommandHandler;
             client.MessageReceived += MessageHandler;
+
             if (args.Length > 0 || Config.KEY != "") {
                 await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
@@ -83,22 +85,22 @@ namespace StarBot {
             if (command.IsDMInteraction) { await command.RespondAsync("This command can not be used in a DM."); return; }
             switch (command.CommandName) {
                 case "key-modify":
-                    await SlashCommands.keySet(command, client, data);
+                    await SlashCommands.KeySet(command, client, data);
                     break;
                 case "key-remove":
-                    await SlashCommands.keyRemove(command, client, data);
+                    await SlashCommands.KeyRemove(command, client, data);
                     break;
                 case "keys-list":
-                    await SlashCommands.keyList(command, client, data);
+                    await SlashCommands.KeyList(command, client, data);
                     break;
                 case "setup-channel":
-                    await SlashCommands.setupChannels(command, client, data);
+                    await SlashCommands.SetupChannels(command, client, data);
                     break;
                 case "execute-task":
-                    await SlashCommands.executeTask(command, scheduler, client, data, cacheManager);
+                    await SlashCommands.ExecuteTask(command, scheduler, client, data, cacheManager);
                     break;
                 case "set-task-channel":
-                    await SlashCommands.setUpTask(command, scheduler, client, data, cacheManager);
+                    await SlashCommands.SetUpTask(command, scheduler, client, data, cacheManager);
                     break;
             }
         }

@@ -8,7 +8,7 @@ public static class Compatiblity {
             return windowsPath.Replace('\\', '/');
         } else {
             return windowsPath; // not a supported OS for buildPath, we do not need total support
-                                // due to the current deployment plan (closed source, internal use only)
+                                // due to the current deployment plan (deployed on Linux Intra w/o MacOS or Other OS support)
         }
     }
 }

@@ -54,6 +54,6 @@ namespace StarBot {
         };
 
         public static string DATABASE_DIRECTORY = Compatiblity.buildPath(Directory.GetCurrentDirectory() + "/guilds/");
-        public const bool AI_ENABLED = true;
+        public const bool AI_ENABLED = true; // AI Moderation Helper System, Requires Ollama server w/ (default) mistral openorca or another model if changed
     }
 }

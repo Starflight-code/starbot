@@ -37,7 +37,6 @@ class Moderation {
         ollamaHold = new Mutex(false, "Ollama API");
     }
     public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
-        //Console.WriteLine($"Message Recieved {message.CleanContent}");
         if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
@@ -62,10 +61,8 @@ class Moderation {
 
         string prompt = "You are a moderator and decide if messages violate rules. " +
         "Only mark a message as a rule violation if you're confident that the violation is present.\n" +
-        //"Reply with only 0 if the message is compliant or 1 if the message violates the rules." +
         "Respond only with a list of violated rule numbers or \"\" if no rules are violated.\n" +
         "Example Response: \"1, 3, 7\" or \"2, 4\"\n" +
-        //"Respond with \"\" if no rules are violated." +
         "\n" +
         "Rules:\n" +
         "1: Don't be excessively mean\n" +
@@ -85,24 +82,18 @@ class Moderation {
                 (client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync("Could not aquire mutex lock within 10 minutes... overloaded or broken?\nWaiting: " + numberOfProcesses);
                 return;
             }
-            //Console.WriteLine("Starting AI Processing...");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate"); //\"{message.CleanContent}\"
             request.Content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
 
             HttpResponseMessage response = await webClient.SendAsync(request);
             try {
-                //Console.WriteLine($"Status: {response.StatusCode}");
                 response.EnsureSuccessStatusCode();
             } catch {
-                //Console.WriteLine("Error, HTTP Request Failed (AI)");
                 return;
             }
             ollamaHold.ReleaseMutex();
             numberOfProcesses--;
-            //Console.WriteLine(await response.Content.ReadAsStringAsync());
             modelOutput json = JsonConvert.DeserializeObject<modelOutput>(await response.Content.ReadAsStringAsync());
-            //Console.WriteLine($"Finished with: {json.response}");
-            //Console.WriteLine($"Output: {output.response}");
             char[] output = json.response.Trim().ToCharArray();
             HashSet<int> returnVal = new();
             for (int i = 0; i < output.Length; i++) {
@@ -111,7 +102,6 @@ class Moderation {
                     returnVal.Add(int.Parse(output[i].ToString()));
                 } catch { }
             }
-            //Console.WriteLine(returnVal.ToArray());
             handleAIModeration(returnVal, guildId, message, client, data);
         });
     }
@@ -121,7 +111,6 @@ class Moderation {
             return;
         }
         SocketGuild guild = client.GetGuild(guildId);
-        //Console.WriteLine("Pushing to output channel");
         guild.GetTextChannel(ulong.Parse(data.fetchValue("Ai Channel", guildId))).SendMessageAsync($"User: {message.Author.Username} Potential Violations: {string.Join(", ", results)} {message.GetJumpUrl()}\n ```{message.CleanContent}```");
     }
 

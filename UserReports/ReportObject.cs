@@ -64,7 +64,6 @@ class Report {
                 } else {
                     attachmentSendList.Add(new(embed.modifyEmbedForReport(this, reportEmbedMessage, embeds[i])));
                 }
-                //for (int i = 0; i < attached.Count; i++) { // echos report message attachments in the log channel
                 if (0 < attached.Count) {
                     attachmentSendList.Add(new(reportEmbedMessage.GetJumpUrl() + " - " + embed.attachedURLs));
                 }
