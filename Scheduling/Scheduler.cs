@@ -9,9 +9,9 @@ namespace StarBot {
 
         public struct scheduledTask {
             public CrontabSchedule schedule;
-            public Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> lambda;
+            public Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda;
             public string name;
-            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> lambda, string name) {
+            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string name) {
                 this.schedule = schedule;
                 this.lambda = lambda;
                 this.name = name;
@@ -23,7 +23,7 @@ namespace StarBot {
         public string getTaskName(int taskIndex) {
             return tasks[taskIndex].name;
         }
-        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> lambda, string taskName) {
+        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string taskName) {
             tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
@@ -95,7 +95,8 @@ namespace StarBot {
             await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
         }
         public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
-            await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager);
+            DebugComms debug = new DebugComms(); // passes through a blank debugComms for compatiblity
+            await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager, debug);
             await databaseUpdate(client, data, guildID);
         }
 
@@ -140,16 +141,15 @@ namespace StarBot {
                         try {
                             for (int j = 0; j < guilds.Count(); j++) {
                                 guildIndexForRecovery = j;
-                                await tasks[nextUp[i]].lambda.Invoke(client, data, guilds[j].Id, cacheManager);
+                                await tasks[nextUp[i]].lambda.Invoke(client, data, guilds[j].Id, cacheManager, debug);
                             }
                             Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
 
                         } catch (Exception e) // logs exceptions to Discord
                         {
-                            debug.LogState(client, e);
-                            //var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
-                            //bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager);
-                            //await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nRecovery Attempt Successful: {attempt.ToString()}");
+                            var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
+                            bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager, debug);
+                            await channel.SendMessageAsync($"{DateTime.Now.ToString()}: {e.Message}\n```{e.StackTrace}```\nRecovery Attempt Successful: {attempt.ToString()}");
                             throw;
                         }
                     }

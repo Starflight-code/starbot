@@ -1,3 +1,4 @@
+using Debug;
 using Discord;
 using Discord.WebSocket;
 using Flurl;
@@ -72,7 +73,7 @@ class WebManager {
     public static async void sendPost(Post post, databaseLookupValues dbVals, Database data, string baseName, DiscordSocketClient client) {
         if (!post.isValid()) {
             throw new ArgumentNullException("\"post\" is not valid (title, body and/or iterative null), required values not provided upon object construction.");
-        } 
+        }
         EmbedBuilder newEmbed = new() {
             Title = (bool)post.iterative ? $"{baseName} Image #{data.fetchValue(dbVals.iteratorKey, dbVals.guildID)}" : $"{baseName}: {post.title}",
             Description = post.body + "\n" +
@@ -87,36 +88,25 @@ class WebManager {
         }
     }
 
-    public static JToken? SelectRandomRedditPost(string url, string lastIDCache, StarBot.Caching.MemoryCacheManager cacheManager, bool containsImage = true) {
-        /*bool useCache = true;
-        if (cache == null || default(JObject) == cache.RequestFromCache<JObject>(url)) {
-            useCache = false;
-        }
-        JObject? json;
-        switch (useCache) {
-            case true:
-                json = cache.RequestFromCache<JObject>(url);
-                break;
-            case false:
-                json = FetchJSON(url);
-                break;
-        }*/
+    public static JToken? SelectRandomRedditPost(string url, string lastIDCache, StarBot.Caching.MemoryCacheManager cacheManager, DebugComms debug, bool containsImage = true) {
+        debug.SetSubPosition("Cache Fetch", 0);
         JObject json = cacheManager.FetchJSONFromCache(url);
-
         Random rand = new();
         int i = 0;
         int randomValue;
+        debug.SetSubPosition("SelectFromJSON", 0);
         while (true) {
             i++;
             randomValue = rand.Next(100); // 0-99
             JToken? token = json["data"]["children"][randomValue]["data"];
-            if (!containsImage || Validation.DuplicateAndImageCheck(token, lastIDCache)) {
+            if (!containsImage || Validation.DuplicateAndImageCheck(token, lastIDCache, debug)) {
                 break;
             }
             if (i >= 150) {
                 json = FetchJSON(url);
             }
         }
+        debug.SetSubPosition("Send \"Data\" Token Back", 0);
         /*if (!useCache) {
             cache.AddToCache(url, DateTime.Now.AddHours(Config.HOURS_TO_CACHE), json);*/
         return json["data"]["children"][randomValue]["data"];

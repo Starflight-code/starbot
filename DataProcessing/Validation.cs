@@ -1,3 +1,4 @@
+using Debug;
 using Newtonsoft.Json.Linq;
 using StarBot;
 
@@ -21,15 +22,16 @@ static class Validation {
         }
         return false;
     }
-    public static bool DuplicateAndImageCheck(JToken? post, string postIDHistory) {
+    public static bool DuplicateAndImageCheck(JToken? post, string postIDHistory, DebugComms debug) {
+        debug.SetSubPosition("Check If Photo Is Link", 1);
         try {
             if (!IsLinkToImage(post["url_overridden_by_dest"].ToString())) {
                 return false;
             }
-        } catch (NullReferenceException) {
+        } catch (Exception) {
             return false;
         }
-
+        debug.SetSubPosition("Check History", 1);
         string[] postIDs = postIDHistory.Split(",");
         string currentPostID = GeneratePostID(post);
         for (int i = 0; i < postIDs.Length; i++) {

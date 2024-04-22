@@ -1,10 +1,11 @@
-﻿using Discord;
+﻿using Debug;
+using Discord;
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 
 namespace StarBot {
     internal class Lambdas {
-        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> XKCD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // XKCD Automation
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> XKCD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // XKCD Automation
             if (data.fetchValue("XKCD Channel", guildID) == "") { return; }
 
             string url = "https://xkcd.com/info.0.json";
@@ -27,7 +28,7 @@ namespace StarBot {
                 await channel.SendMessageAsync("", false, newEmbed.Build());
             }
         };
-        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> CatDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Cat Daily API
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> CatDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // Cat Daily API
             if (data.fetchValue("Cat Channel", guildID) == "") { return; }
 
             string url = "https://www.reddit.com/r/cat/.json?limit=100&t=day";
@@ -41,10 +42,10 @@ namespace StarBot {
                 return;
             }
 
-            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastCatIDs", guildID), cache);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastCatIDs", guildID), cache, debug);
 
             await data.setValue("lastCatIDs", WebManager.AddNewPostID(data.fetchValue("lastCatIDs", guildID), Validation.GeneratePostID(post)), guildID);
-            
+
             EmbedBuilder newEmbed = new() {
                 Title = $"Daily Cat Image #{data.fetchValue("CatNumber", guildID)}",
                 Description = $"{post["title"]}\n" +
@@ -61,7 +62,7 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> DBD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Cat Daily API
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> DBD_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // Cat Daily API
             if (data.fetchValue("DBD Channel", guildID) == "") { return; }
 
             string url = "https://www.reddit.com/r/deadbydaylight/.json?limit=100&t=day";
@@ -108,12 +109,12 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> AnimeDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Anime Daily API
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> AnimeDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // Anime Daily API
             if (data.fetchValue("Anime Channel", guildID) == "") { return; }
 
             string url = "https://www.reddit.com/r/awwnime/.json?limit=100&t=day";
 
-            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastanimeIDs", guildID), cache);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastanimeIDs", guildID), cache, debug);
             await data.initializeIterator("AnimeNumber", guildID, 1);
             await data.setValue("lastAnimeIDs", WebManager.AddNewPostID(data.fetchValue("lastanimeIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
@@ -138,11 +139,11 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> QuestionOfTheDay_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Question of the Day
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> QuestionOfTheDay_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // Question of the Day
             if (data.fetchValue("QOTD Channel", guildID) == "") { return; }
 
             string url = "https://www.reddit.com/r/AskReddit/.json?limit=100&t=day";
-            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastQuestionOfTheDayIDs", guildID), cache, false);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastQuestionOfTheDayIDs", guildID), cache, debug, false);
             await data.initializeIterator("QuestionNumber", guildID, 1);
             await data.setValue("lastQuestionOfTheDayIDs", WebManager.AddNewPostID(data.fetchValue("lastQuestionOfTheDayIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
@@ -167,11 +168,11 @@ namespace StarBot {
             }
         };
 
-        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, Task> AniMemesDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache) => { // Animemes Daily API
+        public static Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> AniMemesDaily_Automation = async (DiscordSocketClient client, Database data, ulong guildID, Caching.MemoryCacheManager cache, DebugComms debug) => { // Animemes Daily API
             if (data.fetchValue("AniMemes Channel", guildID) == "") { return; }
 
             string url = "https://www.reddit.com/r/animemes/.json?limit=100&t=day";
-            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastAnimemesIDs", guildID), cache);
+            JToken? post = WebManager.SelectRandomRedditPost(url, data.fetchValue("lastAnimemesIDs", guildID), cache, debug);
             await data.initializeIterator("AnimemesNumber", guildID, 1);
             await data.setValue("lastAnimemesIDs", WebManager.AddNewPostID(data.fetchValue("lastAnimemesIDs", guildID), Validation.GeneratePostID(post)), guildID);
 
