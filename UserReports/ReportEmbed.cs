@@ -9,55 +9,50 @@ class ReportEmbed {
     public readonly string attachedURLs;
     EmbedFieldBuilder? addToEmbed;
     public ReportEmbed(Report report) {
-        fields = new();
         SocketMessage reportedMessage = report.command.Data.Message;
-        fields.Add(new EmbedFieldBuilder { // message content
-            Name = "Message Content",
-            Value = report.content,
-            IsInline = false
-        });
 
-        fields.Add(new EmbedFieldBuilder { // reported user
-            Name = "Reported",
-            Value = reportedMessage.Author.Mention + " - " + reportedMessage.Author.Username,
-            IsInline = true
-        });
-
-        fields.Add(new EmbedFieldBuilder { // executor
-            Name = "Reporter",
-            Value = report.command.User.Mention + " - " + report.command.User.Username,
-            IsInline = true
-        });
-
-        fields.Add(new EmbedFieldBuilder { // link to reported message
-            Name = "Message Link",
-            Value = reportedMessage.GetJumpUrl(),
-            IsInline = false
-        });
-
-        fields.Add(new EmbedFieldBuilder { // ID of reported message
-            Name = "Message ID",
-            Value = reportedMessage.Id,
-            IsInline = true
-        });
-
-        fields.Add(new EmbedFieldBuilder { // date when reported message was sent
-            Name = "Message Sent",
-            Value = TimestampTag.FromDateTimeOffset(reportedMessage.CreatedAt, style: TimestampTagStyles.Relative).ToString(),
-            IsInline = true
-        });
-
-        fields.Add(new EmbedFieldBuilder { // date when command was executed
-            Name = "Report Received",
-            Value = TimestampTag.FromDateTimeOffset(report.command.CreatedAt, style: TimestampTagStyles.Relative).ToString(),
-            IsInline = true
-        });
-
-        fields.Add(new EmbedFieldBuilder { // message attachment summary
-            Name = "Attachments",
-            Value = report.getAttachmentSummary(),
-            IsInline = false
-        });
+        fields = new List<EmbedFieldBuilder> {
+            new EmbedFieldBuilder { // message content
+                Name = "Message Content",
+                Value = report.content,
+                IsInline = false
+            },
+            new EmbedFieldBuilder { // reported user
+                Name = "Reported",
+                Value = reportedMessage.Author.Mention + " - " + reportedMessage.Author.Username,
+                IsInline = true
+            },
+            new EmbedFieldBuilder { // executor
+                Name = "Reporter",
+                Value = report.command.User.Mention + " - " + report.command.User.Username,
+                IsInline = true
+            },
+            new EmbedFieldBuilder { // link to reported message
+                Name = "Message Link",
+                Value = reportedMessage.GetJumpUrl(),
+                IsInline = false
+            },
+            new EmbedFieldBuilder { // ID of reported message
+                Name = "Message ID",
+                Value = reportedMessage.Id,
+                IsInline = true
+            },
+            new EmbedFieldBuilder { // date when reported message was sent
+                Name = "Message Sent",
+                Value = TimestampTag.FromDateTimeOffset(reportedMessage.CreatedAt, style: TimestampTagStyles.Relative).ToString(),
+                IsInline = true
+            },
+            new EmbedFieldBuilder { // date when command was executed
+                Name = "Report Received",
+                Value = TimestampTag.FromDateTimeOffset(report.command.CreatedAt, style: TimestampTagStyles.Relative).ToString(),
+                IsInline = true
+            },
+            new EmbedFieldBuilder { // message attachment summary
+                Name = "Attachments",
+                Value = report.getAttachmentSummary(),
+                IsInline = false
+            }
+        };
 
         attachedURLs = "";
         for (int i = 0; i < report.attached.Count; i++) { // sends attachments after embed to report channel.
