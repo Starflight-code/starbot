@@ -20,6 +20,7 @@
     <PackageReference Include="Flurl.Http" Version="3.2.4" />
     <PackageReference Include="NCrontab.Signed" Version="3.3.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
   </ItemGroup>
 
 </Project>

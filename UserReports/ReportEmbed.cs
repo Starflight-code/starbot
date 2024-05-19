@@ -4,11 +4,13 @@ using Discord.WebSocket;
 
 namespace StarBot.UserReports;
 
-class ReportEmbed {
+class ReportEmbed
+{
     public readonly List<EmbedFieldBuilder> fields;
     public readonly string attachedURLs;
     EmbedFieldBuilder? addToEmbed;
-    public ReportEmbed(Report report) {
+    public ReportEmbed(Report report)
+    {
         SocketMessage reportedMessage = report.command.Data.Message;
 
         fields = new List<EmbedFieldBuilder> {
@@ -55,13 +57,16 @@ class ReportEmbed {
         };
 
         attachedURLs = "";
-        for (int i = 0; i < report.attached.Count; i++) { // sends attachments after embed to report channel.
+        for (int i = 0; i < report.attached.Count; i++)
+        { // sends attachments after embed to report channel.
             attachedURLs += report.attached[i].ProxyUrl + " ";
         }
     }
 
-    public Embed generateEmbed(Report report) {
-        return new EmbedBuilder {
+    public Embed generateEmbed(Report report)
+    {
+        return new EmbedBuilder
+        {
             Title = "Message Report",
             Color = Color.DarkRed,
             //Description = content,
@@ -70,16 +75,20 @@ class ReportEmbed {
         }.Build();
     }
 
-    public void generateEmbedField(RestUserMessage reportEmbedMessage) {
-        addToEmbed = new EmbedFieldBuilder { // embed field added to reported message attachment/embed echo
+    public void generateEmbedField(RestUserMessage reportEmbedMessage)
+    {
+        addToEmbed = new EmbedFieldBuilder
+        { // embed field added to reported message attachment/embed echo
             Name = "Attached to Report",
             Value = reportEmbedMessage.GetJumpUrl(),
             IsInline = false
         };
     }
 
-    public Embed modifyEmbedForReport(Report report, RestUserMessage reportEmbedMessage, Embed embed) {
-        if (addToEmbed == null) {
+    public Embed modifyEmbedForReport(Report report, RestUserMessage reportEmbedMessage, Embed embed)
+    {
+        if (addToEmbed == null)
+        {
             generateEmbedField(reportEmbedMessage);
         }
         return embed.ToEmbedBuilder().AddField(addToEmbed).Build();

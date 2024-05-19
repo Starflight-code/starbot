@@ -2,15 +2,19 @@
 using StarBot.Caching;
 
 namespace StarBot.DiscordInterop;
-internal class SlashCommands {
-    public static async Task KeySet(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+internal class SlashCommands
+{
+    public static async Task KeySet(SocketSlashCommand command, DiscordSocketClient? client, Database data)
+    {
         if (command.GuildId == null) { return; }
 
-        if (UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+        if (UserManager.userHasManageServer(client, command.GuildId, command.User.Id))
+        {
             var commandArgs = command.Data.Options.ToArray();
             string? key = commandArgs[0].Value.ToString();
             string? value = commandArgs[1].Value.ToString();
-            if (key == null || value == null) {
+            if (key == null || value == null)
+            {
                 await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
                 return;
             }
@@ -20,15 +24,18 @@ internal class SlashCommands {
             await (client.GetChannel(1125899458002034799) as SocketTextChannel).ModifyMessageAsync(1143042164490772502, m => { m.Content = data.getSerializedDB((ulong)command.GuildId); });
         }
     }
-    public static async Task KeyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+    public static async Task KeyRemove(SocketSlashCommand command, DiscordSocketClient? client, Database data)
+    {
         if (command.GuildId == null) { return; }
-        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id))
+        {
             return;
         } // permission check
 
         var commandArgs = command.Data.Options.ToArray();
         string? key = commandArgs[0].Value.ToString();
-        if (key == null) { // argument check
+        if (key == null)
+        { // argument check
             await command.RespondAsync("Execution Failed, invalid arguments were provided.", ephemeral: true);
             return;
         }
@@ -37,15 +44,18 @@ internal class SlashCommands {
         await command.RespondAsync("Changes applied: \"" + key + "\" - REMOVED" + "\nChanges will sync immediately.", ephemeral: true);
         await data.updateDB((ulong)command.GuildId);
     }
-    public static async Task KeyList(SocketSlashCommand command, DiscordSocketClient? client, Database data) {
+    public static async Task KeyList(SocketSlashCommand command, DiscordSocketClient? client, Database data)
+    {
         if (command.GuildId == null) { return; }
-        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id))
+        {
             return;
         } // permission check
 
         string[]? keys = data.getKeys((ulong)command.GuildId);
         string output = "";
-        for (int i = 0; i < keys.Length; i++) {
+        for (int i = 0; i < keys.Length; i++)
+        {
             string? value = data.fetchValue(keys[i], (ulong)command.GuildId);
             if (i != 0) { output += "\n- "; }
             output += $"{keys[i]} - {value}";
@@ -53,10 +63,12 @@ internal class SlashCommands {
 
         await command.RespondAsync("Keys associated with the current guild: \n" + output, ephemeral: true);
     }
-    public static async Task ExecuteTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
+    public static async Task ExecuteTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache)
+    {
         if (command.GuildId == null) { return; }
         await command.DeferAsync(ephemeral: true);
-        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id))
+        {
             await command.FollowupAsync("You do not have the required permissions to execute this command.", ephemeral: true);
             return;
         }
@@ -67,10 +79,12 @@ internal class SlashCommands {
         await command.FollowupAsync($"Task \"{scheduler.getTaskName(taskIndex)}\" executed.", ephemeral: true);
     }
 
-    public static async Task SetUpTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache) {
+    public static async Task SetUpTask(SocketSlashCommand command, Scheduler scheduler, DiscordSocketClient client, Database data, MemoryCacheManager cache)
+    {
         if (command.GuildId == null || command.ChannelId == null) { return; }
         await command.DeferAsync(ephemeral: true);
-        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id)) {
+        if (!UserManager.userHasManageServer(client, command.GuildId, command.User.Id))
+        {
             await command.FollowupAsync("You do not have the required permissions to execute this command.", ephemeral: true);
             return;
         }
@@ -81,12 +95,14 @@ internal class SlashCommands {
         await command.FollowupAsync($"Current channel linked with \"{scheduler.getTaskName(taskIndex)}\".", ephemeral: true);
     }
 
-    public static async Task SetupChannels(SocketSlashCommand command, DiscordSocketClient client, Database data) {
+    public static async Task SetupChannels(SocketSlashCommand command, DiscordSocketClient client, Database data)
+    {
         await command.DeferAsync(ephemeral: true);
         var commandArgs = command.Data.Options.ToArray();
         int argument = unchecked((int)(Int64)commandArgs[0].Value);
 
-        switch (argument) {
+        switch (argument)
+        {
             case 0: // Report Channel
                 await data.setValue("Report Channel", command.ChannelId.ToString(), command.GuildId, true);
                 command.FollowupAsync("Associated current channel with report system.");

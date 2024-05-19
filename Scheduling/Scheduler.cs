@@ -4,14 +4,18 @@ using Discord.WebSocket;
 using NCrontab;
 using StarBot.Caching;
 
-namespace StarBot {
-    internal class Scheduler {
+namespace StarBot
+{
+    internal class Scheduler
+    {
 
-        public struct scheduledTask {
+        public struct scheduledTask
+        {
             public CrontabSchedule schedule;
             public Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda;
             public string name;
-            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string name) {
+            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string name)
+            {
                 this.schedule = schedule;
                 this.lambda = lambda;
                 this.name = name;
@@ -20,46 +24,59 @@ namespace StarBot {
         List<scheduledTask> tasks = new();
         List<int> nextUp = new();
 
-        public string getTaskName(int taskIndex) {
+        public string getTaskName(int taskIndex)
+        {
             return tasks[taskIndex].name;
         }
-        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string taskName) {
+        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string taskName)
+        {
             tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
-        public void findNextUp() {
+        public void findNextUp()
+        {
             DateTime now = DateTime.Now;
             nextUp.Clear();
-            if (Config.DEBUG_MODE) {
-                for (int i = 0; i < tasks.Count; i++) {
+            if (Config.DEBUG_MODE)
+            {
+                for (int i = 0; i < tasks.Count; i++)
+                {
                     nextUp.Add(i);
                 }
                 return;
             }
             int soonestIndex = 0;
-            for (int i = 0; i < tasks.Count; i++) {
-                if (tasks[i].schedule.GetNextOccurrence(now) < tasks[soonestIndex].schedule.GetNextOccurrence(now)) {
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i].schedule.GetNextOccurrence(now) < tasks[soonestIndex].schedule.GetNextOccurrence(now))
+                {
                     soonestIndex = i;
                 }
             }
             DateTime soonestOccurrence = tasks[soonestIndex].schedule.GetNextOccurrence(now);
-            for (int i = 0; i < tasks.Count; i++) {
-                if (tasks[i].schedule.GetNextOccurrence(now) == soonestOccurrence) {
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                if (tasks[i].schedule.GetNextOccurrence(now) == soonestOccurrence)
+                {
                     nextUp.Add(i);
                 }
             }
         }
-        public int waitTimeNextUp() {
+        public int waitTimeNextUp()
+        {
             return (int)(tasks[nextUp[0]].schedule.GetNextOccurrence(DateTime.Now) - DateTime.Now).TotalMilliseconds;
         }
-        public string waitTimeReadable() {
+        public string waitTimeReadable()
+        {
             DateTime waitUntil = tasks[nextUp[0]].schedule.GetNextOccurrence(DateTime.Now).ToLocalTime();
             return waitUntil.ToShortTimeString() + " on " + waitUntil.ToShortDateString();
         }
-        public async Task databaseUpdate(DiscordSocketClient client, Database data, ulong guildID) {
+        public async Task databaseUpdate(DiscordSocketClient client, Database data, ulong guildID)
+        {
             await data.updateDB(guildID);
         }
 
-        public async Task addInvokeCommand(SocketGuild? guild, Database data/*, Watcher watcher*/) {
+        public async Task addInvokeCommand(SocketGuild? guild, Database data/*, Watcher watcher*/)
+        {
             var report = new MessageCommandBuilder();
             var scheduledTaskInvoke = new SlashCommandBuilder();
             var scheduledTaskSetup = new SlashCommandBuilder();
@@ -75,7 +92,8 @@ namespace StarBot {
                 .WithDescription("Which task would you like to invoke?")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer);
-            for (int i = 0; i < tasks.Count; i++) {
+            for (int i = 0; i < tasks.Count; i++)
+            {
                 taskInvokeBuilder.AddChoice(tasks[i].name, i);
             }
             scheduledTaskInvoke.AddOption(taskInvokeBuilder);
@@ -87,7 +105,8 @@ namespace StarBot {
                 .WithDescription("Which task would you like to set up?")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer);
-            for (int i = 0; i < tasks.Count; i++) {
+            for (int i = 0; i < tasks.Count; i++)
+            {
                 setupBuilder.AddChoice(tasks[i].name, i);
             }
             scheduledTaskSetup.AddOption(setupBuilder);
@@ -95,33 +114,41 @@ namespace StarBot {
             await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
             await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
         }
-        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
+        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID)
+        {
             DebugComms debug = new DebugComms(); // passes through a blank debugComms for compatiblity
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager, debug);
             await databaseUpdate(client, data, guildID);
         }
 
-        public void returnTaskDbName(int taskIndex) {
+        public void returnTaskDbName(int taskIndex)
+        {
 
         }
-        public void logNextUp(DiscordSocketClient client) {
+        public void logNextUp(DiscordSocketClient client)
+        {
             Console.WriteLine("Waiting until " + waitTimeReadable());
             string queued = "";
-            for (int j = 0; j < nextUp.Count; j++) {
-                if (j != 0) {
+            for (int j = 0; j < nextUp.Count; j++)
+            {
+                if (j != 0)
+                {
                     queued += ", ";
                 }
                 queued += getTaskName(nextUp[j]);
             }
             Console.WriteLine("Queued Tasks: " + queued);
         }
-        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
+        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/)
+        {
             DebugComms debug = new();
             debug.setVerbosity(true);
             int guildIndexForRecovery = 0;
             int lambdaIndex = 0;
-            try {
-                while (true) {
+            try
+            {
+                while (true)
+                {
                     debug.UpdatePosition("SetActivity");
                     Random random = new();
                     int indexOfNextStatus = random.Next(Config.STATUS_MESSAGES.Length);
@@ -136,17 +163,21 @@ namespace StarBot {
                     await client.SetGameAsync("the internet, sending the best content to your channels.", type: ActivityType.Listening);
                     debug.UpdatePosition("Executing Lambdas");
                     List<SocketGuild> guilds = client.Guilds.ToList();
-                    for (int i = 0; i < nextUp.Count; i++) {
+                    for (int i = 0; i < nextUp.Count; i++)
+                    {
                         lambdaIndex = i;
                         debug.UpdatePosition($"Executing Lambdas, on: {getTaskName(nextUp[i])}");
-                        try {
-                            for (int j = 0; j < guilds.Count(); j++) {
+                        try
+                        {
+                            for (int j = 0; j < guilds.Count(); j++)
+                            {
                                 guildIndexForRecovery = j;
                                 await tasks[nextUp[i]].lambda.Invoke(client, data, guilds[j].Id, cacheManager, debug);
                             }
                             Console.WriteLine($"Executed Task {getTaskName(nextUp[i])}");
 
-                        } catch (Exception e) // logs exceptions to Discord
+                        }
+                        catch (Exception e) // logs exceptions to Discord
                         {
                             var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
                             bool attempt = Recovery.attemptRecovery(guilds.GetRange(guildIndexForRecovery, guilds.Count() - guildIndexForRecovery), tasks[nextUp[lambdaIndex]], client, data, cacheManager, debug);
@@ -154,13 +185,15 @@ namespace StarBot {
                             throw;
                         }
                     }
-                    foreach (SocketGuild guild in client.Guilds) {
+                    foreach (SocketGuild guild in client.Guilds)
+                    {
                         debug.UpdatePosition($"Database Update: {guild.Name} ({guild.Id})");
                         await databaseUpdate(client, data, guild.Id);
                     }
                 }
-            } catch (Exception e) // logs exceptions to Discord
-                    {
+            }
+            catch (Exception e) // logs exceptions to Discord
+            {
                 debug.LogState(client, e);
                 throw;
             }

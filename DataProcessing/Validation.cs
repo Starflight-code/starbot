@@ -2,12 +2,15 @@ using Debug;
 using Newtonsoft.Json.Linq;
 using StarBot;
 
-static class Validation {
+static class Validation
+{
 
-    public static string preProcessValue(string value) {
+    public static string preProcessValue(string value)
+    {
         return value.ToLower().Trim();
     }
-    public static bool IsLinkToImage(string link) {
+    public static bool IsLinkToImage(string link)
+    {
         string[] extensions = {
             ".jpg",
             ".jpeg",
@@ -15,38 +18,51 @@ static class Validation {
             ".gif"
         };
 
-        for (int i = 0; i < Config.IMAGE_EXTENSIONS.Length; i++) {
-            if (link.EndsWith(Config.IMAGE_EXTENSIONS[i])) {
+        for (int i = 0; i < Config.IMAGE_EXTENSIONS.Length; i++)
+        {
+            if (link.EndsWith(Config.IMAGE_EXTENSIONS[i]))
+            {
                 return true;
             }
         }
         return false;
     }
-    public static bool DuplicateAndImageCheck(JToken? post, string postIDHistory, DebugComms debug) {
+    public static bool DuplicateAndImageCheck(JToken? post, string postIDHistory, DebugComms debug)
+    {
         debug.SetSubPosition("Check If Photo Is Link", 1);
-        try {
-            if (!IsLinkToImage(post["url_overridden_by_dest"].ToString())) {
+        try
+        {
+            if (!IsLinkToImage(post["url_overridden_by_dest"].ToString()))
+            {
                 return false;
             }
-        } catch (Exception) {
+        }
+        catch (Exception)
+        {
             return false;
         }
         debug.SetSubPosition("Check History", 1);
         string[] postIDs;
-        try {
+        try
+        {
             postIDs = postIDHistory.Split(",");
-        } catch (NullReferenceException) {
+        }
+        catch (NullReferenceException)
+        {
             return true;
         }
         string currentPostID = GeneratePostID(post);
-        for (int i = 0; i < postIDs.Length; i++) {
-            if (currentPostID == postIDs[i]) {
+        for (int i = 0; i < postIDs.Length; i++)
+        {
+            if (currentPostID == postIDs[i])
+            {
                 return false;
             }
         }
         return true;
     }
-    public static string GeneratePostID(JToken? post) {
+    public static string GeneratePostID(JToken? post)
+    {
         return post["subreddit_id"].ToString() + "-" + post["id"].ToString();
     }
 }
