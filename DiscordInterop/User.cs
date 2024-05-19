@@ -2,52 +2,40 @@ using Discord;
 using Discord.WebSocket;
 
 namespace StarBot.DiscordInterop;
-internal class UserManager
-{
-    public static bool userHasRole(DiscordSocketClient? client, ulong? guildID, ulong userID, ulong roleID)
-    {
-        if (guildID == null)
-        {
+internal class UserManager {
+    public static bool userHasRole(DiscordSocketClient? client, ulong? guildID, ulong userID, ulong roleID) {
+        if (guildID == null) {
             return false;
         }
         var userRoles = client.GetGuild((ulong)guildID).GetUser(userID).Roles;
-        foreach (SocketRole role in userRoles)
-        {
-            if (role.Id == roleID)
-            {
+        foreach (SocketRole role in userRoles) {
+            if (role.Id == roleID) {
                 return true;
             }
         }
         return false;
     }
-    public static bool userHasManageServer(DiscordSocketClient? client, ulong? guildID, ulong userID)
-    {
-        if (guildID == null)
-        {
+    public static bool userHasManageServer(DiscordSocketClient? client, ulong? guildID, ulong userID) {
+        if (guildID == null) {
             return false;
         }
         var userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
         return userPermissions.Has(Discord.GuildPermission.ManageGuild);
     }
 
-    public static bool isStaff(DiscordSocketClient? client, ulong? guildID, ulong userID)
-    {
-        if (guildID == null)
-        {
+    public static bool isStaff(DiscordSocketClient? client, ulong? guildID, ulong userID) {
+        if (guildID == null) {
             return false;
         }
         GuildPermissions userPermissions = client.GetGuild((ulong)guildID).GetUser(userID).GuildPermissions;
         return userPermissions.Has(Discord.GuildPermission.ModerateMembers);
     }
 
-    public static bool isBot(DiscordSocketClient? client, ulong userID)
-    {
+    public static bool isBot(DiscordSocketClient? client, ulong userID) {
         return client.GetUser(userID).IsBot;
     }
-    public static bool userBlackisted(Database data, ulong? guildID, ulong userID, string command)
-    {
-        if (guildID == null)
-        {
+    public static bool userBlackisted(Database data, ulong? guildID, ulong userID, string command) {
+        if (guildID == null) {
             return false;
         }
         string? outputArray = data.fetchValue($"{command} blacklist", (ulong)guildID);

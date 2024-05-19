@@ -5,40 +5,31 @@ using StarBot;
 
 namespace Debug;
 
-class DebugComms
-{
+class DebugComms {
     bool verbose = false;
     private string position = "";
     string[] subPositions = new string[10];
-    public void UpdatePosition(string newPosition)
-    {
+    public void UpdatePosition(string newPosition) {
         position = newPosition;
-        if (verbose)
-        {
+        if (verbose) {
             Console.WriteLine($"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Reached Position: {position}");
         }
-        for (int i = 0; i < subPositions.Length; i++)
-        {
+        for (int i = 0; i < subPositions.Length; i++) {
             subPositions[i] = "";
         }
     }
-    public void SetSubPosition(string subPosition, uint index)
-    {
-        if (index >= subPosition.Length)
-        {
+    public void SetSubPosition(string subPosition, uint index) {
+        if (index >= subPosition.Length) {
             throw new ArgumentException("Sub-Position Index Out Of Range");
         }
-        if (verbose)
-        {
+        if (verbose) {
             Console.WriteLine($"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}: Reached Sub-Position: {subPosition}");
         }
     }
-    public void setVerbosity(bool verbose)
-    {
+    public void setVerbosity(bool verbose) {
         this.verbose = verbose;
     }
-    public async void LogState(DiscordSocketClient client, Exception e)
-    {
+    public async void LogState(DiscordSocketClient client, Exception e) {
         var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
 
         string subPositionConcat = string.Join("", subPositions);

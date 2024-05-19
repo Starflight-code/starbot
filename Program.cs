@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using StarBot.Caching;
 using StarBot.DiscordInterop;
@@ -78,15 +78,19 @@ namespace StarBot
             }
 
             if (data == null) { return; }
-            try
+
+            await Task.Run(async () =>
             {
-                await scheduler.schedulerProcess(client, data, cacheManager/*, watcher*/);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " Error: " + e.Message + "\n" + e.StackTrace);
-                throw;
-            }
+                try
+                {
+                    await scheduler.schedulerProcess(client, data, cacheManager/*, watcher*/);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " Error: " + e.Message + "\n" + e.StackTrace);
+                    throw;
+                }
+            });
             await Task.Delay(-1);
         }
 

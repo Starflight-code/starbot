@@ -4,10 +4,8 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using StarBot;
 
-public static class Initialization
-{
-    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data/*, Watcher watcher*/)
-    {
+public static class Initialization {
+    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data/*, Watcher watcher*/) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
         var dbkeylist = new SlashCommandBuilder();
@@ -34,8 +32,7 @@ public static class Initialization
             .WithRequired(true)
             .WithType(ApplicationCommandOptionType.Integer));
 
-        try
-        {
+        try {
             await guild.DeleteApplicationCommandsAsync();
             await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
             await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
@@ -43,9 +40,7 @@ public static class Initialization
             await guild.CreateApplicationCommandAsync(setupChannels.Build());
 
 
-        }
-        catch (HttpException exception)
-        {
+        } catch (HttpException exception) {
             var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
             var channel = client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel;
             await channel.SendMessageAsync($"Slash Command Initialization Error: \n{json}");

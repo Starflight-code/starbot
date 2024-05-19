@@ -4,22 +4,18 @@ using Newtonsoft.Json;
 using StarBot;
 using StarBot.DiscordInterop;
 
-class Moderation
-{
-    struct modelSend
-    {
+class Moderation {
+    struct modelSend {
         public string model = "mistral-openorca";
         public string prompt;
         public string system;
         public bool stream = false;
-        public modelSend(string systemPrompt, string prompt)
-        {
+        public modelSend(string systemPrompt, string prompt) {
             system = systemPrompt;
             this.prompt = prompt;
         }
     }
-    struct modelOutput
-    {
+    struct modelOutput {
         public string model;
         public DateTime created_at;
         public string response;
@@ -36,22 +32,18 @@ class Moderation
     int numberOfProcesses = 0;
     HashSet<ulong> seenIDs = new();
     HashSet<ulong> approvedIDs = new();
-    public Moderation()
-    {
+    public Moderation() {
         webClient.Timeout = TimeSpan.FromMinutes(10);
         ollamaHold = new Mutex(false, "Ollama API");
     }
-    public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data)
-    {
-        if (message.Channel.GetChannelType() != ChannelType.Text)
-        {
+    public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
+        if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
 
         ulong guildId = (message.Channel as SocketGuildChannel).Guild.Id;
 
-        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || data.fetchValue("Ai Channel", guildId) == "")
-        {
+        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || data.fetchValue("Ai Channel", guildId) == "") {
             seenIDs.Add(guildId);
             return; // if server is not AI enabled, do not monitor
         }
@@ -59,13 +51,11 @@ class Moderation
         approvedIDs.Add(guildId);
         //Console.WriteLine("Valid Guild");
 
-        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id))
-        {
+        if (UserManager.isStaff(client, guildId, message.Author.Id) || UserManager.isBot(client, message.Author.Id)) {
             return; // doesn't watch staff or bot spam
         }
 
-        if (message.CleanContent.Trim() == "")
-        {
+        if (message.CleanContent.Trim() == "") {
             return; // null messages can't be scanned
         }
 
@@ -84,13 +74,11 @@ class Moderation
         "7: Don't discuss moderation actions (warns, mutes, bans) or appeals\n" +
         "8: No non-english allowed\n" +
         "9: Avoid posting offsite links except to moderated platforms like Youtube or Twitch";// +
-        //"Respond only with rule numbers or \"\" if no rules are violated.";
-        await Task.Run(async () =>
-        {
+        //"Respond only with rule numbers or \"\" if no rules are violated.";\
+        await Task.Run(async () => {
             numberOfProcesses++; // may cause a race condition, probably not (edge case)
             bool aquired = ollamaHold.WaitOne(TimeSpan.FromMinutes(10));
-            if (!aquired)
-            {
+            if (!aquired) {
                 (client.GetChannel(Config.ERROR_LOG_CHANNEL) as SocketTextChannel).SendMessageAsync("Could not aquire mutex lock within 10 minutes... overloaded or broken?\nWaiting: " + numberOfProcesses);
                 return;
             }
@@ -98,12 +86,9 @@ class Moderation
             request.Content = new StringContent(JsonConvert.SerializeObject(new modelSend(prompt, $"Message: \"{message.CleanContent}\"")), null, "text/plain");
 
             HttpResponseMessage response = await webClient.SendAsync(request);
-            try
-            {
+            try {
                 response.EnsureSuccessStatusCode();
-            }
-            catch
-            {
+            } catch {
                 return;
             }
             ollamaHold.ReleaseMutex();
@@ -111,23 +96,18 @@ class Moderation
             modelOutput json = JsonConvert.DeserializeObject<modelOutput>(await response.Content.ReadAsStringAsync());
             char[] output = json.response.Trim().ToCharArray();
             HashSet<int> returnVal = new();
-            for (int i = 0; i < output.Length; i++)
-            {
-                try
-                {
+            for (int i = 0; i < output.Length; i++) {
+                try {
                     if (output[i] == '(') { break; }
                     returnVal.Add(int.Parse(output[i].ToString()));
-                }
-                catch { }
+                } catch { }
             }
             handleAIModeration(returnVal, guildId, message, client, data);
         });
     }
 
-    private void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data)
-    {
-        if (results.Count == 0)
-        {
+    private void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data) {
+        if (results.Count == 0) {
             return;
         }
         SocketGuild guild = client.GetGuild(guildId);
