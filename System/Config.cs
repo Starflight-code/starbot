@@ -1,10 +1,14 @@
-namespace StarBot {
-    internal static class Config {
-
-        public struct StatusMessage {
+namespace StarBot
+{
+    internal static class Config
+    {
+        const string _VERSION = "1.0.1-TESTING"
+        public struct StatusMessage
+        {
             public string message;
             public Discord.ActivityType activity;
-            public StatusMessage(string message, Discord.ActivityType activity) {
+            public StatusMessage(string message, Discord.ActivityType activity)
+            {
                 this.message = message;
                 this.activity = activity;
             }
