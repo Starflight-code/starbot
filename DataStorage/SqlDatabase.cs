@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Entity.Infrastructure.Interception;
 using System.Data.SQLite;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks.Dataflow;
 using Discord;
@@ -8,18 +9,25 @@ using Discord.Audio.Streams;
 using Discord.WebSocket;
 using StarBot;
 
-class SqlDatabase {
+
+public class SqlDatabase {
     private readonly SQLiteConnection connection;
-    public SqlDatabase() {
+    public SqlDatabase(DiscordSocketClient client) {
+        bool needsMigration = false;
         string pathToDB = "sqlDatabase.db";
+        if (!File.Exists(pathToDB)) {
+            needsMigration = true;
+        }
         connection = new SQLiteConnection("Data Source=" + pathToDB + ";Version=3;");
         connection.Open();
+        if (needsMigration) {
+            MigrateFromLegacy(client);
+        }
     }
 
     public async void MigrateFromLegacy(DiscordSocketClient client) {
         Database data = new(client);
         var transaction = await connection.BeginTransactionAsync();
-        //await transaction.SaveAsync("Migration");
         SQLiteCommand command = connection.CreateCommand();
         command.CommandText = @"
         CREATE TABLE guildData (
@@ -31,6 +39,7 @@ class SqlDatabase {
         lastanimeids text,
         lastqotdids text,
         lastanimemeids text,
+        lastcatids text,
         animechannel int,
         animemeschannel int,
         qotdchannel int,
@@ -54,6 +63,7 @@ class SqlDatabase {
             command.Parameters.AddWithValue("$lastanimeids", data.fetchValue("lastanimeids", guild));
             command.Parameters.AddWithValue("$lastanimemeids", data.fetchValue("lastanimemesids", guild));
             command.Parameters.AddWithValue("$lastqotdids", data.fetchValue("lastquestionofthedayids", guild));
+            command.Parameters.AddWithValue("$lastcatids", data.fetchValue("lastcatids", guild));
             command.Parameters.AddWithValue("$animechannel", data.fetchValue("anime channel", guild));
             command.Parameters.AddWithValue("$catchannel", data.fetchValue("cat channel", guild));
             command.Parameters.AddWithValue("$animemeschannel", data.fetchValue("animemes channel", guild));
@@ -65,8 +75,8 @@ class SqlDatabase {
         await transaction.CommitAsync();
     }
     public async Task<T?> readFromDB<T>(string entry, ulong guildID) {
+        entry = entry.ToLower();
         SQLiteCommand command = connection.CreateCommand();
-        //command.CommandText = "SELECT lastanimeids FROM guildData WHERE guildid=902055963572441088;";
         command.CommandText = @$"
         SELECT {entry} FROM guildData WHERE guildid=$guildid
         ";
@@ -84,7 +94,8 @@ class SqlDatabase {
         return output;
     }
 
-    public async void writeToDB(string entry, string toWrite, ulong guildID) {
+    public async void writeToDB<T>(string entry, T toWrite, ulong guildID) {
+        entry = entry.ToLower();
         SQLiteCommand command = connection.CreateCommand();
         command.CommandText = @$"
         UPDATE guildData SET {entry}=$updatedValue WHERE guildid=$guildID
@@ -95,11 +106,49 @@ class SqlDatabase {
     }
 
     public async void iterateValue(string entry, ulong guildID) {
-        using var transaction = await connection.BeginTransactionAsync() {
+        entry = entry.ToLower();
+        using (var transaction = await connection.BeginTransactionAsync()) {
             int value = await readFromDB<int>(entry, guildID);
             writeToDB(entry, (++value).ToString(), guildID);
 
             await transaction.CommitAsync();
         }
+    }
+
+    public async void addGuild(ulong guildID) {
+        SQLiteCommand command = connection.CreateCommand();
+        command.CommandText = @"
+            INSERT INTO guildData
+            VALUES ($guildid, $animenumber, $animemesnumber, $catnumber, $qotdnumber, $lastanimeids, $lastqotdids, $lastanimemeids, $animechannel, $animemeschannel, $qotdchannel, $xkcdchannel, $catchannel, $reportchannel)
+            ";
+        command.Parameters.AddWithValue("$guildid", guildID);
+        command.Parameters.AddWithValue("$animenumber", 0);
+        command.Parameters.AddWithValue("$animemesnumber", 0);
+        command.Parameters.AddWithValue("$qotdnumber", 0);
+        command.Parameters.AddWithValue("$catnumber", 0);
+        command.Parameters.AddWithValue("$lastanimeids", "");
+        command.Parameters.AddWithValue("$lastanimemeids", "");
+        command.Parameters.AddWithValue("$lastqotdids", "");
+        command.Parameters.AddWithValue("$animechannel", 0);
+        command.Parameters.AddWithValue("$catchannel", 0);
+        command.Parameters.AddWithValue("$animemeschannel", 0);
+        command.Parameters.AddWithValue("$xkcdchannel", 0);
+        command.Parameters.AddWithValue("$qotdchannel", 0);
+        command.Parameters.AddWithValue("$reportchannel", 0);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task<List<ulong>> getGuilds() {
+        SQLiteCommand command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT guildid FROM guildData
+            ";
+        List<ulong> guildIds = new();
+        using (var reader = await command.ExecuteReaderAsync()) {
+            while (reader.Read()) {
+                guildIds.Add((ulong)reader.GetInt64(0));
+            }
+        }
+        return guildIds;
     }
 }

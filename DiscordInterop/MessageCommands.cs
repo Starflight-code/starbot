@@ -4,18 +4,15 @@ using StarBot.UserReports;
 
 namespace StarBot.DiscordInterop;
 
-internal class MessageCommands
-{
-    public static async Task UserReport(SocketMessageCommand command, DiscordSocketClient? client, Database data)
-    {
+internal class MessageCommands {
+    public static async Task UserReport(SocketMessageCommand command, DiscordSocketClient? client, SqlDatabase data) {
 
         await command.DeferAsync(ephemeral: true);
 
-        if (!await ReportCommand.initialChecks(command, data))
-        {
+        if (!await ReportCommand.initialChecks(command, data)) {
             return;
         }
-        ulong reportChannel = ulong.Parse(data.fetchValue("Report Channel", (ulong)command.GuildId));
+        ulong reportChannel = await data.readFromDB<ulong>("reportchannel", (ulong)command.GuildId);
 
         Report report = new Report(command);
 
@@ -23,22 +20,17 @@ internal class MessageCommands
 
         List<Report.MessageAttachment> toSend = report.getSendList(message);
 
-        for (int i = 0; i < toSend.Count; i++)
-        {
-            if (toSend[i].isEmbed)
-            {
+        for (int i = 0; i < toSend.Count; i++) {
+            if (toSend[i].isEmbed) {
                 await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(embed: toSend[i].embed);
-            }
-            else
-            {
+            } else {
                 await (client.GetGuild((ulong)command.GuildId).GetChannel(reportChannel) as SocketTextChannel).SendMessageAsync(toSend[i].URL);
             }
         }
 
 
 
-        await command.FollowupAsync(ephemeral: true, embed: new EmbedBuilder
-        {
+        await command.FollowupAsync(ephemeral: true, embed: new EmbedBuilder {
             Color = Color.Blue,
             Title = "Report Received",
             Description = "We've received your report, and we're looking into it on our side. This report contains a bit of information, such as: " +

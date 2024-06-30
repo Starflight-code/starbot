@@ -5,10 +5,10 @@ using Newtonsoft.Json;
 using StarBot;
 
 public static class Initialization {
-    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild, Database data/*, Watcher watcher*/) {
+    public static async Task CreateSlashCommandsAsync(DiscordSocketClient client, SocketGuild guild) {
         var dbkeymodify = new SlashCommandBuilder();
         var dbkeyremove = new SlashCommandBuilder();
-        var dbkeylist = new SlashCommandBuilder();
+        //var dbkeylist = new SlashCommandBuilder();
         var setupChannels = new SlashCommandBuilder();
 
         dbkeymodify.WithName("key-modify");
@@ -20,8 +20,8 @@ public static class Initialization {
         dbkeyremove.WithDescription("Remove a key value pair in the database");
         dbkeyremove.AddOption("key", ApplicationCommandOptionType.String, "The key you would like to remove", isRequired: true);
 
-        dbkeylist.WithName("keys-list");
-        dbkeylist.WithDescription("List all key-value pairs for this guild");
+        //dbkeylist.WithName("keys-list");
+        //dbkeylist.WithDescription("List all key-value pairs for this guild");
 
         setupChannels.WithName("setup-channel");
         setupChannels.WithDescription("Associate systems with log channels to make them work.");
@@ -36,7 +36,7 @@ public static class Initialization {
             await guild.DeleteApplicationCommandsAsync();
             await guild.CreateApplicationCommandAsync(dbkeymodify.Build());
             await guild.CreateApplicationCommandAsync(dbkeyremove.Build());
-            await guild.CreateApplicationCommandAsync(dbkeylist.Build());
+            //await guild.CreateApplicationCommandAsync(dbkeylist.Build());
             await guild.CreateApplicationCommandAsync(setupChannels.Build());
 
 

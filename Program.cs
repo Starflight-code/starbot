@@ -8,6 +8,8 @@ namespace StarBot {
         private Scheduler scheduler = new();
         private DiscordSocketClient? client;
         private Database? data;
+
+        private SqlDatabase? sqlData;
         MemoryCacheManager cacheManager = new();
         Moderation moderation = new();
         //Watcher watcher = new();
@@ -34,11 +36,6 @@ namespace StarBot {
             client.MessageCommandExecuted += MessageCommandHandler;
             client.MessageReceived += MessageHandler;
 
-
-            SqlDatabase newData = new();
-            //newData.MigrateFromLegacy(client);
-            string? animemes = await newData.readFromDB<string>("animenumber", 902055963572441088);
-
             if (args.Length > 0 || Config.KEY != "") {
                 await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
@@ -51,14 +48,17 @@ namespace StarBot {
             client.Ready += async () => {
                 Console.WriteLine("Bot is connected!");
                 data = new(client);
-                for (int i = 0; i < data.guilds.Count(); i++) {
-                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(data.guilds[i]), data/*, watcher*/);
+                sqlData = new(client);
+                List<ulong> guilds = await sqlData.getGuilds();
+                for (int i = 0; i < guilds.Count(); i++) {
+                    await Initialization.CreateSlashCommandsAsync(client, client.GetGuild(guilds[i]));
                 }
                 ready = true;
             };
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
+
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
@@ -66,15 +66,16 @@ namespace StarBot {
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.QuestionOfTheDay_Automation, "Question of the Day Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.DBD_Automation, "Dead by Daylight Automation");
 
-            for (int i = 0; i < data.guilds.Count(); i++) {
-                await scheduler.addInvokeCommand(client.GetGuild(data.guilds[i]), data/*, watcher*/);
+            List<ulong> guilds = await sqlData.getGuilds();
+            for (int i = 0; i < guilds.Count(); i++) {
+                await scheduler.addInvokeCommand(client.GetGuild(guilds[i]));
             }
 
             if (data == null) { return; }
 
             await Task.Run(async () => {
                 try {
-                    await scheduler.schedulerProcess(client, data, cacheManager/*, watcher*/);
+                    await scheduler.schedulerProcess(client, sqlData, cacheManager/*, watcher*/);
                 } catch (Exception e) {
                     Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + " Error: " + e.Message + "\n" + e.StackTrace);
                     throw;
@@ -92,23 +93,23 @@ namespace StarBot {
             if (client == null || data == null) { return; }
             if (command.IsDMInteraction) { await command.RespondAsync("This command can not be used in a DM."); return; }
             switch (command.CommandName) {
-                case "key-modify":
-                    await SlashCommands.KeySet(command, client, data);
+                /*case "key-modify": Commands are vulnurable to SQL injection if some permission issue occurs, I'd rather disable them
+                    await SlashCommands.KeySet(command, client, sqlData);
                     break;
                 case "key-remove":
-                    await SlashCommands.KeyRemove(command, client, data);
-                    break;
-                case "keys-list":
-                    await SlashCommands.KeyList(command, client, data);
-                    break;
+                    await SlashCommands.KeyRemove(command, client, sqlData);
+                    break;*/
+                //case "keys-list":
+                //    await SlashCommands.KeyList(command, client, data);
+                //    break;
                 case "setup-channel":
-                    await SlashCommands.SetupChannels(command, client, data);
+                    await SlashCommands.SetupChannels(command, client, sqlData);
                     break;
                 case "execute-task":
-                    await SlashCommands.ExecuteTask(command, scheduler, client, data, cacheManager);
+                    await SlashCommands.ExecuteTask(command, scheduler, client, sqlData, cacheManager);
                     break;
                 case "set-task-channel":
-                    await SlashCommands.SetUpTask(command, scheduler, client, data, cacheManager);
+                    await SlashCommands.SetUpTask(command, scheduler, client, sqlData, cacheManager);
                     break;
             }
         }
@@ -120,14 +121,14 @@ namespace StarBot {
             }
             switch (command.CommandName) {
                 case "Report Message":
-                    await MessageCommands.UserReport(command, client, data);
+                    await MessageCommands.UserReport(command, client, sqlData);
                     break;
             }
         }
 
         private async Task MessageHandler(SocketMessage message) {
             if (client == null || data == null || message.Author.IsBot) { return; }
-            await moderation.HandleChatMessage(message, client, data);
+            await moderation.HandleChatMessage(message, client, sqlData);
         }
     }
 }

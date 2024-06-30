@@ -9,9 +9,9 @@ namespace StarBot {
 
         public struct scheduledTask {
             public CrontabSchedule schedule;
-            public Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda;
+            public Func<DiscordSocketClient, SqlDatabase, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda;
             public string name;
-            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string name) {
+            public scheduledTask(CrontabSchedule schedule, Func<DiscordSocketClient, SqlDatabase, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string name) {
                 this.schedule = schedule;
                 this.lambda = lambda;
                 this.name = name;
@@ -23,7 +23,7 @@ namespace StarBot {
         public string getTaskName(int taskIndex) {
             return tasks[taskIndex].name;
         }
-        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, Database, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string taskName) {
+        public void registerTask(CrontabSchedule schedule, Func<DiscordSocketClient, SqlDatabase, ulong, Caching.MemoryCacheManager, DebugComms, Task> lambda, string taskName) {
             tasks.Add(new scheduledTask(schedule, lambda, taskName));
         }
         public void findNextUp() {
@@ -59,7 +59,7 @@ namespace StarBot {
             await data.updateDB(guildID);
         }
 
-        public async Task addInvokeCommand(SocketGuild? guild, Database data/*, Watcher watcher*/) {
+        public async Task addInvokeCommand(SocketGuild? guild) {
             var report = new MessageCommandBuilder();
             var scheduledTaskInvoke = new SlashCommandBuilder();
             var scheduledTaskSetup = new SlashCommandBuilder();
@@ -95,10 +95,10 @@ namespace StarBot {
             await guild.CreateApplicationCommandAsync(scheduledTaskInvoke.Build());
             await guild.CreateApplicationCommandAsync(scheduledTaskSetup.Build());
         }
-        public async Task invokeTask(int taskIndex, DiscordSocketClient client, Database data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
+        public async Task invokeTask(int taskIndex, DiscordSocketClient client, SqlDatabase data, Caching.MemoryCacheManager cacheManager, ulong guildID) {
             DebugComms debug = new DebugComms(); // passes through a blank debugComms for compatiblity
             await tasks[taskIndex].lambda.Invoke(client, data, guildID, cacheManager, debug);
-            await databaseUpdate(client, data, guildID);
+            //await databaseUpdate(client, data, guildID);
         }
 
         public void returnTaskDbName(int taskIndex) {
@@ -115,7 +115,7 @@ namespace StarBot {
             }
             Console.WriteLine("Queued Tasks: " + queued);
         }
-        public async Task schedulerProcess(DiscordSocketClient client, Database data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
+        public async Task schedulerProcess(DiscordSocketClient client, SqlDatabase data, MemoryCacheManager cacheManager/*, Watcher watcher*/) {
             DebugComms debug = new();
             debug.setVerbosity(true);
             int guildIndexForRecovery = 0;
@@ -154,10 +154,10 @@ namespace StarBot {
                             throw;
                         }
                     }
-                    foreach (SocketGuild guild in client.Guilds) {
+                    /*foreach (SocketGuild guild in client.Guilds) {
                         debug.UpdatePosition($"Database Update: {guild.Name} ({guild.Id})");
                         await databaseUpdate(client, data, guild.Id);
-                    }
+                    }*/
                 }
             } catch (Exception e) // logs exceptions to Discord
               {

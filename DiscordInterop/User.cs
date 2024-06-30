@@ -34,11 +34,11 @@ internal class UserManager {
     public static bool isBot(DiscordSocketClient? client, ulong userID) {
         return client.GetUser(userID).IsBot;
     }
-    public static bool userBlackisted(Database data, ulong? guildID, ulong userID, string command) {
+    public static async Task<bool> userBlackisted(SqlDatabase data, ulong? guildID, ulong userID, string command) {
         if (guildID == null) {
             return false;
         }
-        string? outputArray = data.fetchValue($"{command} blacklist", (ulong)guildID);
+        string? outputArray = await data.readFromDB<string>($"{command} blacklist", (ulong)guildID);
         string[] outArray = outputArray.Split(',');
         HashSet<string> arraySet = outArray.ToHashSet();
 

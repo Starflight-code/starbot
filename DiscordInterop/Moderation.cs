@@ -36,14 +36,14 @@ class Moderation {
         webClient.Timeout = TimeSpan.FromMinutes(10);
         ollamaHold = new Mutex(false, "Ollama API");
     }
-    public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, Database data) {
+    public async Task HandleChatMessage(SocketMessage message, DiscordSocketClient? client, SqlDatabase data) {
         if (message.Channel.GetChannelType() != ChannelType.Text) {
             return;
         }
 
         ulong guildId = (message.Channel as SocketGuildChannel).Guild.Id;
 
-        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || data.fetchValue("Ai Channel", guildId) == "") {
+        if (seenIDs.Contains(guildId) && !approvedIDs.Contains(guildId) || await data.readFromDB<ulong>("aichannel", guildId) == 0) {
             seenIDs.Add(guildId);
             return; // if server is not AI enabled, do not monitor
         }
@@ -106,12 +106,12 @@ class Moderation {
         });
     }
 
-    private void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, Database data) {
+    private async void handleAIModeration(HashSet<int> results, ulong guildId, SocketMessage message, DiscordSocketClient? client, SqlDatabase data) {
         if (results.Count == 0) {
             return;
         }
         SocketGuild guild = client.GetGuild(guildId);
-        guild.GetTextChannel(ulong.Parse(data.fetchValue("Ai Channel", guildId))).SendMessageAsync($"User: {message.Author.Username} Potential Violations: {string.Join(", ", results)} {message.GetJumpUrl()}\n ```{message.CleanContent}```");
+        guild.GetTextChannel(await data.readFromDB<ulong>("aichannel", guildId)).SendMessageAsync($"User: {message.Author.Username} Potential Violations: {string.Join(", ", results)} {message.GetJumpUrl()}\n ```{message.CleanContent}```");
     }
 
 }
