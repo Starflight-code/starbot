@@ -34,6 +34,11 @@ namespace StarBot {
             client.MessageCommandExecuted += MessageCommandHandler;
             client.MessageReceived += MessageHandler;
 
+
+            SqlDatabase newData = new();
+            //newData.MigrateFromLegacy(client);
+            string? animemes = await newData.readFromDB<string>("animenumber", 902055963572441088);
+
             if (args.Length > 0 || Config.KEY != "") {
                 await client.LoginAsync(TokenType.Bot, Config.KEY != "" ? Config.KEY : args[0]); // uses Config key in debug mode
             } else {
@@ -54,8 +59,6 @@ namespace StarBot {
             while (client.ConnectionState != ConnectionState.Connected || !ready) {
                 await Task.Delay(500);
             }
-            SqlDatabase newData = new();
-            newData.MigrateFromLegacy(client);
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 12 * * Tue,Thu,Sat"), Lambdas.XKCD_Automation, "XKCD Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.CatDaily_Automation, "Cat Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");

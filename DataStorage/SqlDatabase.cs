@@ -1,20 +1,22 @@
+using System.Data;
 using System.Data.Entity.Infrastructure.Interception;
 using System.Data.SQLite;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks.Dataflow;
+using Discord;
+using Discord.Audio.Streams;
 using Discord.WebSocket;
 using StarBot;
 
-class SqlDatabase
-{
+class SqlDatabase {
     private readonly SQLiteConnection connection;
-    public SqlDatabase()
-    {
+    public SqlDatabase() {
         string pathToDB = "sqlDatabase.db";
         connection = new SQLiteConnection("Data Source=" + pathToDB + ";Version=3;");
         connection.Open();
     }
 
-    public async void MigrateFromLegacy(DiscordSocketClient client)
-    {
+    public async void MigrateFromLegacy(DiscordSocketClient client) {
         Database data = new(client);
         var transaction = await connection.BeginTransactionAsync();
         //await transaction.SaveAsync("Migration");
@@ -38,8 +40,7 @@ class SqlDatabase
         );
         ";
         _ = command.ExecuteNonQuery();
-        foreach (ulong guild in data.guilds)
-        {
+        foreach (ulong guild in data.guilds) {
             command.Reset();
             command.CommandText = @"
             INSERT INTO guildData
@@ -62,7 +63,43 @@ class SqlDatabase
             await command.ExecuteNonQueryAsync();
         }
         await transaction.CommitAsync();
+    }
+    public async Task<T?> readFromDB<T>(string entry, ulong guildID) {
+        SQLiteCommand command = connection.CreateCommand();
+        //command.CommandText = "SELECT lastanimeids FROM guildData WHERE guildid=902055963572441088;";
+        command.CommandText = @$"
+        SELECT {entry} FROM guildData WHERE guildid=$guildid
+        ";
+        command.Parameters.AddWithValue("$guildid", guildID);
+        T? output = default;
+        using (var reader = await command.ExecuteReaderAsync()) {
+            while (reader.Read()) {
+                if (reader.GetFieldType(0) == typeof(T)) {
+                    output = await reader.GetFieldValueAsync<T>(0);
+                } else {
+                    return default;
+                }
+            }
+        }
+        return output;
+    }
 
+    public async void writeToDB(string entry, string toWrite, ulong guildID) {
+        SQLiteCommand command = connection.CreateCommand();
+        command.CommandText = @$"
+        UPDATE guildData SET {entry}=$updatedValue WHERE guildid=$guildID
+        ";
+        command.Parameters.AddWithValue("$guildID", guildID);
+        command.Parameters.AddWithValue("$updatedValue", toWrite);
+        await command.ExecuteNonQueryAsync();
+    }
 
+    public async void iterateValue(string entry, ulong guildID) {
+        using var transaction = await connection.BeginTransactionAsync() {
+            int value = await readFromDB<int>(entry, guildID);
+            writeToDB(entry, (++value).ToString(), guildID);
+
+            await transaction.CommitAsync();
+        }
     }
 }
