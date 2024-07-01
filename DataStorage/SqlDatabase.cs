@@ -53,7 +53,7 @@ public class SqlDatabase {
             command.Reset();
             command.CommandText = @"
             INSERT INTO guildData
-            VALUES ($guildid, $animenumber, $animemesnumber, $catnumber, $qotdnumber, $lastanimeids, $lastqotdids, $lastanimemeids, $animechannel, $animemeschannel, $qotdchannel, $xkcdchannel, $catchannel, $reportchannel)
+            VALUES ($guildid, $animenumber, $animemesnumber, $catnumber, $qotdnumber, $lastanimeids, $lastqotdids, $lastcatids, $lastanimemeids, $animechannel, $animemeschannel, $qotdchannel, $xkcdchannel, $catchannel, $reportchannel)
             ";
             command.Parameters.AddWithValue("$guildid", guild);
             command.Parameters.AddWithValue("$animenumber", data.fetchValue("animenumber", guild));
