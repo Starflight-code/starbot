@@ -39,7 +39,7 @@ public class SqlDatabase {
         qotdnumber int,
         lastanimeids text,
         lastqotdids text,
-        lastanimemeids text,
+        lastanimemesids text,
         lastcatids text,
         animechannel UNSIGNED BIG INT,
         animemeschannel UNSIGNED BIG INT,
@@ -54,7 +54,7 @@ public class SqlDatabase {
             command.Reset();
             command.CommandText = @"
             INSERT INTO guildData
-            VALUES ($guildid, $animenumber, $animemesnumber, $catnumber, $qotdnumber, $lastanimeids, $lastqotdids, $lastcatids, $lastanimemeids, $animechannel, $animemeschannel, $qotdchannel, $xkcdchannel, $catchannel, $reportchannel)
+            VALUES ($guildid, $animenumber, $animemesnumber, $catnumber, $qotdnumber, $lastanimeids, $lastqotdids, $lastcatids, $lastanimemesids, $animechannel, $animemeschannel, $qotdchannel, $xkcdchannel, $catchannel, $reportchannel)
             ";
             command.Parameters.AddWithValue("$guildid", guild);
             command.Parameters.AddWithValue("$animenumber", data.fetchValue("animenumber", guild));
@@ -62,7 +62,7 @@ public class SqlDatabase {
             command.Parameters.AddWithValue("$qotdnumber", data.fetchValue("questionnumber", guild));
             command.Parameters.AddWithValue("$catnumber", data.fetchValue("catnumber", guild));
             command.Parameters.AddWithValue("$lastanimeids", data.fetchValue("lastanimeids", guild));
-            command.Parameters.AddWithValue("$lastanimemeids", data.fetchValue("lastanimemesids", guild));
+            command.Parameters.AddWithValue("$lastanimemesids", data.fetchValue("lastanimemesids", guild));
             command.Parameters.AddWithValue("$lastqotdids", data.fetchValue("lastquestionofthedayids", guild));
             command.Parameters.AddWithValue("$lastcatids", data.fetchValue("lastcatids", guild));
             command.Parameters.AddWithValue("$animechannel", data.fetchValue("anime channel", guild));
