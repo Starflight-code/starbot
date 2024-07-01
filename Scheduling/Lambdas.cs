@@ -142,7 +142,7 @@ namespace StarBot {
             string url = "https://www.reddit.com/r/AskReddit/.json?limit=100&t=day";
             JToken? post = WebManager.SelectRandomRedditPost(url, await data.readFromDB<string>("lastqotdids", guildID), cache, debug, false);
 
-            data.writeToDB<string>("lastQuestionOfTheDayIDs", WebManager.AddNewPostID(await data.readFromDB<string>("lastqotdids", guildID), Validation.GeneratePostID(post)), guildID);
+            data.writeToDB<string>("lastqotdids", WebManager.AddNewPostID(await data.readFromDB<string>("lastqotdids", guildID), Validation.GeneratePostID(post)), guildID);
 
             SocketTextChannel? channel = client.GetChannel(await data.readFromDB<ulong>("qotdchannel", guildID)) as SocketTextChannel;
 
@@ -152,13 +152,13 @@ namespace StarBot {
             }
 
             EmbedBuilder newEmbed = new() {
-                Title = $"Question of the Day #{await data.readFromDB<int>("QuestionNumber", guildID)}",
+                Title = $"Question of the Day #{await data.readFromDB<int>("qotdnumber", guildID)}",
                 Description = post["title"] +
                 $"\nhttps://reddit.com{post["permalink"]}"
             };
             newEmbed.WithFooter("powered by https://www.reddit.com/r/AskReddit/");
 
-            data.iterateValue("questionnumber", guildID);
+            data.iterateValue("qotdnumber", guildID);
 
             if (!Config.DEBUG_MODE) {
                 await channel.SendMessageAsync("", false, newEmbed.Build());
