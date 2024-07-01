@@ -75,25 +75,7 @@ public class SqlDatabase {
         }
         await transaction.CommitAsync();
     }
-    public async Task<ulong> readUlongFromDB(string entry, ulong guildID) {
-        entry = entry.ToLower();
-        SQLiteCommand command = connection.CreateCommand();
-        command.CommandText = @$"
-        SELECT {entry} FROM guildData WHERE guildid=$guildid
-        ";
-        command.Parameters.AddWithValue("$guildid", guildID);
-        ulong output = default;
-        using (var reader = await command.ExecuteReaderAsync()) {
-            while (reader.Read()) {
-                output = (ulong)await reader.GetFieldValueAsync<long>(0);
-            }
-        }
-        return output;
-    }
     public async Task<T?> readFromDB<T>(string entry, ulong guildID) {
-        if (typeof(T) == typeof(ulong)) {
-            return (T?)Convert.ChangeType(await readUlongFromDB(entry, guildID), typeof(T));
-        }
         entry = entry.ToLower();
         SQLiteCommand command = connection.CreateCommand();
         command.CommandText = @$"
@@ -103,7 +85,7 @@ public class SqlDatabase {
         T? output = default;
         using (var reader = await command.ExecuteReaderAsync()) {
             while (reader.Read()) {
-                output = await reader.GetFieldValueAsync<T>(0);
+                return (T?)Convert.ChangeType(reader.GetValue(0), typeof(T));
             }
         }
         return output;

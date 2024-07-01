@@ -1,4 +1,4 @@
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using StarBot.Caching;
 using StarBot.DiscordInterop;
@@ -64,7 +64,7 @@ namespace StarBot {
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AnimeDaily_Automation, "Anime Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0/8 * * *"), Lambdas.AniMemesDaily_Automation, "Animemes Automation");
             scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.QuestionOfTheDay_Automation, "Question of the Day Automation");
-            scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.DBD_Automation, "Dead by Daylight Automation");
+            //scheduler.registerTask(NCrontab.CrontabSchedule.Parse("0 0 * * *"), Lambdas.DBD_Automation, "Dead by Daylight Automation");
 
             List<ulong> guilds = await sqlData.getGuilds();
             for (int i = 0; i < guilds.Count(); i++) {

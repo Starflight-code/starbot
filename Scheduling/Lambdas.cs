@@ -181,7 +181,7 @@ namespace StarBot {
             }
 
             EmbedBuilder newEmbed = new() {
-                Title = "Anime Meme #" + data.readFromDB<int>("animemesnumber", guildID),
+                Title = "Anime Meme #" + await data.readFromDB<int>("animemesnumber", guildID),
                 Description = post["title"] +
                 $"\nhttps://reddit.com{post["permalink"]}",
                 ImageUrl = post["url_overridden_by_dest"].ToString()
