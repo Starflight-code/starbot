@@ -92,8 +92,8 @@ pub async fn xkcd_handler() -> Post {
     Post {
         title: format!("{} - {}", json["safe_title"], json["num"]),
         body: json["alt"].to_string(),
-        powered_by: String::from("XKCD.com"),
-        image_link: Some(json["img"].to_string()),
+        powered_by: String::from("xkcd.com"),
+        image_link: Some(json["img"].to_string().replace("\"", "")),
         url: Some(format!("https://xkcd.com/{}/", json["num"])),
     }
     /*EmbedBuilder newEmbed = new() {
