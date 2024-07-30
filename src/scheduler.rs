@@ -76,7 +76,15 @@ pub async fn scheduler(client: serenity::Client, memcache: &mut Memcache) {
                     )
                     .await;
                 }
-                AutomationType::XKCD => todo!(),
+                AutomationType::XKCD => {
+                    let response = api::xkcd_handler().await;
+                    discord::send_embed(
+                        &client.http,
+                        response,
+                        &ChannelId::new(automations[i].channelid),
+                    )
+                    .await
+                }
             }
             automations[i].update_db(&connection);
         }
