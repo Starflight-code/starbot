@@ -6,6 +6,7 @@ mod scheduler;
 pub mod scheduler_data;
 
 use std::env;
+use std::process::exit;
 
 use chrono::{TimeDelta, Utc};
 use memcache::Memcache;
@@ -147,10 +148,11 @@ async fn add_schedule(
 #[tokio::main]
 async fn main() {
     let args: Vec<String> = env::args().collect();
-    let token = &args[1];
-    if token.len() < 10 {
-        panic!("A token should be passed in through command line arguments.");
+    if args.len() < 2 {
+        println!("A token should be passed in through command line arguments.\nEx. ./StarBot <Bot-Token>");
+        exit(1);
     }
+    let token = &args[1];
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::MESSAGE_CONTENT;
