@@ -92,4 +92,17 @@ impl ScheduledAutomation {
     pub fn increment(&mut self) {
         self.iterator += 1;
     }
+
+    pub fn add_id(&mut self, id: String) {
+        let array = self.lastids.as_array_mut().unwrap();
+        if array.len() >= 5 {
+            array.remove(0);
+        }
+        array.push(id.into());
+    }
+
+    pub fn is_post_duplicate(&self, id: String) -> bool {
+        let json_id = serde_json::Value::from(id);
+        return self.lastids.as_array().unwrap().contains(&json_id);
+    }
 }

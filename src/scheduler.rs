@@ -55,7 +55,9 @@ pub async fn scheduler(client: serenity::Client, memcache: &mut Memcache) {
             continue;
         }
         let next_up = generate_timeline(&automations);
-        let time_to_wait: u64 = (next_up.1 - Local::now()).num_seconds().try_into().unwrap();
+        let time_to_wait: u64 = ((next_up.1 - Local::now()).num_seconds() + 1)
+            .try_into()
+            .unwrap(); // adds an extra second to prevent multiple messages per cycle (Rust is too fast)
         println!(
             "{}: Waiting until {} for execution of {}. Waiting: {} seconds...",
             Local::now().format("%m/%d/%Y %H:%M"),

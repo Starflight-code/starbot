@@ -49,11 +49,14 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
 
     if automation.has_image {
         let mut image_present = false;
+        let mut duplicate_id = false;
         let mut rng = rand::thread_rng();
-        while !image_present && max_fail_iterator < 150 {
+        while !image_present && !duplicate_id && max_fail_iterator < 150 {
             let randint = rng.gen_range(0..=100);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             image_present = is_image_link(&json_segment["url_overridden_by_dest"].to_string());
+            duplicate_id =
+                automation.is_post_duplicate(json_segment["id"].as_str().unwrap().to_string());
             max_fail_iterator += 1;
         }
         if max_fail_iterator >= 150 {
@@ -81,6 +84,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
         image_link,
     };
     automation.increment();
+    automation.add_id(json_segment["id"].as_str().unwrap().to_string());
     return post;
 }
 

@@ -149,7 +149,7 @@ async fn add_schedule(
 async fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        println!("A token should be passed in through command line arguments.\nEx. ./StarBot <Bot-Token>");
+        println!("A token should be passed in through command line arguments.\nEx: ./StarBot <Bot-Token>");
         exit(1);
     }
     let token = &args[1];
