@@ -4,6 +4,7 @@ pub mod discord;
 pub mod memcache;
 mod scheduler;
 pub mod scheduler_data;
+pub mod settings;
 
 use std::env;
 use std::process::exit;

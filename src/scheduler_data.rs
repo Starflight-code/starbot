@@ -2,6 +2,7 @@ use chrono::{DateTime, Local};
 use rusqlite::Connection;
 
 use crate::database::{self, Automation};
+use crate::settings::_DUPLICATE_MAX_ARRAY_SIZE;
 
 #[derive(Debug, poise::ChoiceParameter)]
 pub enum AutomationType {
@@ -95,7 +96,7 @@ impl ScheduledAutomation {
 
     pub fn add_id(&mut self, id: String) {
         let array = self.lastids.as_array_mut().unwrap();
-        if array.len() >= 5 {
+        while array.len() >= _DUPLICATE_MAX_ARRAY_SIZE.try_into().unwrap() {
             array.remove(0);
         }
         array.push(id.into());

@@ -1,3 +1,4 @@
+use crate::settings::_CACHE_LIFESPAN_HOURS;
 use chrono::{DateTime, TimeDelta, Utc};
 use std::collections::HashMap;
 
@@ -32,7 +33,7 @@ impl Memcache {
         self.cache.insert(
             key,
             CachedObject {
-                expiration: Utc::now() + TimeDelta::hours(36),
+                expiration: Utc::now() + TimeDelta::hours(_CACHE_LIFESPAN_HOURS.into()),
                 json: to_add,
             },
         );
