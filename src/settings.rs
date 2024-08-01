@@ -1,0 +1,2 @@
+pub const _CACHE_LIFESPAN_HOURS: i32 = 36;
+pub const _DUPLICATE_MAX_ARRAY_SIZE: i32 = 7;
