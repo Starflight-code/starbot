@@ -47,11 +47,11 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
     let mut json_segment = json["data"]["children"][0]["data"].to_owned();
     let image_link: Option<String>;
 
+    let mut duplicate_id = false;
+    let mut rng = rand::thread_rng();
     if automation.has_image {
         let mut image_present = false;
-        let mut duplicate_id = false;
-        let mut rng = rand::thread_rng();
-        while !image_present && !duplicate_id && max_fail_iterator < 150 {
+        while (!image_present || duplicate_id) && max_fail_iterator < 150 {
             let randint = rng.gen_range(0..=100);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             image_present = is_image_link(&json_segment["url_overridden_by_dest"].to_string());
@@ -59,16 +59,23 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
                 automation.is_post_duplicate(json_segment["id"].as_str().unwrap().to_string());
             max_fail_iterator += 1;
         }
-        if max_fail_iterator >= 150 {
-            panic!("Something went wrong, couldn't locate an image in 150 loops.");
-        }
         image_link = Some(
             json_segment["url_overridden_by_dest"]
                 .to_string()
                 .replace("\"", ""),
         )
     } else {
-        image_link = None
+        image_link = None;
+        while duplicate_id && max_fail_iterator < 150 {
+            let randint = rng.gen_range(0..=100);
+            json_segment = json["data"]["children"][randint]["data"].to_owned();
+            duplicate_id =
+                automation.is_post_duplicate(json_segment["id"].as_str().unwrap().to_string());
+            max_fail_iterator += 1;
+        }
+    }
+    if max_fail_iterator >= 150 {
+        panic!("Something went wrong, couldn't locate an image in 150 loops.");
     }
     let post = Post {
         title: format!("{} #{}", automation.display_name, automation.iterator),
@@ -100,12 +107,6 @@ pub async fn xkcd_handler() -> Post {
         image_link: Some(json["img"].to_string().replace("\"", "")),
         url: Some(format!("https://xkcd.com/{}/", json["num"])),
     }
-    /*EmbedBuilder newEmbed = new() {
-        Title = json["safe_title"] + " - " + json["num"],
-        Description = json["alt"].ToString(),
-        ImageUrl = json["img"].ToString()
-    };
-    newEmbed.WithFooter("powered by xkcd.com"); */
 }
 
 pub fn is_image_link(url: &str) -> bool {

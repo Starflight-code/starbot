@@ -1,6 +1,6 @@
 [package]
 name = "starbot"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [profile.release]
@@ -18,8 +18,4 @@ rand = "0.8.5"
 croner = "2.0.5"
 chrono = "0.4.38"
 rusqlite = { version = "0.32.1", features = ["bundled"] }
-#rkyv = { version = "0.7", features = ["validation"] }
-#sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
-#serde = "1.0.204"
 poise = "0.6.1"
-#once_cell = "1.19.0"
