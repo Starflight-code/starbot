@@ -49,6 +49,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
 
     let mut duplicate_id = false;
     let mut rng = rand::thread_rng();
+
     if automation.has_image {
         let mut image_present = false;
         while (!image_present || duplicate_id) && max_fail_iterator < 150 {
@@ -91,7 +92,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
         image_link,
     };
     automation.increment();
-    automation.add_id(json_segment["id"].as_str().unwrap().to_string());
+    automation.add_id(json_segment["id"].to_string());
     return post;
 }
 
