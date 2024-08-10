@@ -70,8 +70,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
         while duplicate_id && max_fail_iterator < 150 {
             let randint = rng.gen_range(0..=100);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
-            duplicate_id =
-                automation.is_post_duplicate(json_segment["id"].as_str().unwrap().to_string());
+            duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
             max_fail_iterator += 1;
         }
     }
