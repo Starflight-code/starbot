@@ -47,7 +47,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
     let mut json_segment = json["data"]["children"][0]["data"].to_owned();
     let image_link: Option<String>;
 
-    let mut duplicate_id = false;
+    let mut duplicate_id = true; // initial to true, makes !automation.has_image loop run
     let mut rng = rand::thread_rng();
 
     if automation.has_image {
