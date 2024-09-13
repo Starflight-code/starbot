@@ -11,7 +11,7 @@ pub struct Post {
     pub image_link: Option<String>,
 }
 
-pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut Memcache) -> Post {
+pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut Memcache) -> Result<Post, String> {
     let http_client = reqwest::Client::new();
     let subreddit = automation.db_name.as_str();
 
@@ -71,11 +71,16 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
             let randint = rng.gen_range(0..=100);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
+            if json["data"]["children"][randint]["data"]["subreddit"].to_string() == "null" {
+                duplicate_id = true;
+            }
             max_fail_iterator += 1;
         }
     }
     if max_fail_iterator >= 150 {
-        panic!("Something went wrong, couldn't locate an image in 150 loops.");
+        println!("Something went wrong, couldn't locate an image in 150 loops.");
+        dbg!(&json["data"]);
+        return Err("Patience Exceeded in Check Loop".to_string());
     }
     let post = Post {
         title: format!("{} #{}", automation.display_name, automation.iterator),
@@ -92,7 +97,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
     };
     automation.increment();
     automation.add_id(json_segment["id"].to_string());
-    return post;
+    return Ok(post);
 }
 
 pub async fn xkcd_handler() -> Post {

@@ -26,6 +26,12 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: serenity::prelude::Context, msg: Message) {
+        let channel = msg.channel(&ctx.http).await.unwrap();
+        if channel.private().is_some() {
+            // Do something
+            return;
+        }
+        
         if msg.content == "!ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
                 println!("Error sending message: {why:?}");

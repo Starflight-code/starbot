@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use rusqlite::Connection;
-//use serde::Serialize;
 use crate::{
     scheduler_data::{AutomationType, ScheduledAutomation},
     Error,

@@ -118,12 +118,14 @@ pub async fn scheduler(client: serenity::Client, memcache: &mut Memcache) {
             match automations[i].handler {
                 AutomationType::Reddit => {
                     let response = api::reddit_handler(&mut automations[i], memcache).await;
-                    discord::send_embed(
-                        &client.http,
-                        response,
-                        &ChannelId::new(automations[i].channelid),
-                    )
-                    .await;
+                    if let Ok(valid_post) = response {
+                        discord::send_embed(
+                            &client.http,
+                            valid_post,
+                            &ChannelId::new(automations[i].channelid),
+                        )
+                        .await;
+                    }
                 }
                 AutomationType::XKCD => {
                     let response = api::xkcd_handler().await;
@@ -149,7 +151,9 @@ pub async fn run_automation(cache: &Http, automation: &mut ScheduledAutomation) 
     match automation.handler {
         AutomationType::Reddit => {
             let response = api::reddit_handler(automation, &mut Memcache::new()).await;
-            discord::send_embed(cache, response, &ChannelId::new(automation.channelid)).await;
+            if let Ok(valid_post) = response {
+                discord::send_embed(cache, valid_post, &ChannelId::new(automation.channelid)).await;
+            }
         }
         AutomationType::XKCD => {
             let response = api::xkcd_handler().await;
