@@ -3,6 +3,8 @@ use reqwest::header;
 
 use crate::{memcache::Memcache, scheduler_data::ScheduledAutomation};
 
+const _MAX_CHECK_FAILURES: i32 = 150; // maximum amount of failures to allow while looping (prevents infinite loop)
+
 pub struct Post {
     pub title: String,
     pub body: String,
@@ -57,12 +59,11 @@ pub async fn reddit_handler(
 
     if automation.has_image {
         let mut image_present = false;
-        while (!image_present || duplicate_id) && max_fail_iterator < 150 {
+        while (!image_present || duplicate_id) && max_fail_iterator < _MAX_CHECK_FAILURES {
             let randint = rng.gen_range(0..=100);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             image_present = is_image_link(&json_segment["url_overridden_by_dest"].to_string());
-            duplicate_id =
-                automation.is_post_duplicate(json_segment["id"].as_str().unwrap().to_string());
+            duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
             max_fail_iterator += 1;
         }
         image_link = Some(
@@ -72,7 +73,7 @@ pub async fn reddit_handler(
         )
     } else {
         image_link = None;
-        while duplicate_id && max_fail_iterator < 150 {
+        while duplicate_id && max_fail_iterator < _MAX_CHECK_FAILURES {
             let randint = rng.gen_range(0..=100);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
@@ -82,7 +83,7 @@ pub async fn reddit_handler(
             max_fail_iterator += 1;
         }
     }
-    if max_fail_iterator >= 150 {
+    if max_fail_iterator >= _MAX_CHECK_FAILURES {
         println!("Something went wrong, couldn't locate an image in 150 loops.");
         dbg!(&json["data"]);
         return Err("Patience Exceeded in Check Loop".to_string());
