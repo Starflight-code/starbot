@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 pub trait Environment {
     fn check(&self) -> bool;
     fn print(&self);
@@ -64,7 +62,7 @@ impl Environment for RedditEnv {
             self.automation
         );
         println!("History: {}", self.history_state);
-        dbg!(&self.history_state);
+        dbg!(&self.selected_json);
     }
     fn check(&self) -> bool {
         let history: Vec<&str> = self.history_state.split(",").collect();
