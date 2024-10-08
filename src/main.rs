@@ -2,6 +2,7 @@ pub mod api;
 pub mod database;
 pub mod discord;
 pub mod memcache;
+pub mod monitor;
 mod scheduler;
 pub mod scheduler_data;
 pub mod settings;
@@ -31,7 +32,7 @@ impl EventHandler for Handler {
             // Do something
             return;
         }
-        
+
         if msg.content == "!ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
                 println!("Error sending message: {why:?}");

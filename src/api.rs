@@ -11,7 +11,10 @@ pub struct Post {
     pub image_link: Option<String>,
 }
 
-pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut Memcache) -> Result<Post, String> {
+pub async fn reddit_handler(
+    automation: &mut ScheduledAutomation,
+    memcache: &mut Memcache,
+) -> Result<Post, String> {
     let http_client = reqwest::Client::new();
     let subreddit = automation.db_name.as_str();
 
@@ -24,24 +27,26 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
     );
     headers.append(reqwest::header::USER_AGENT, "Mozilla/5.0".parse().unwrap());
     let cache = memcache.get(subreddit.to_string());
-    let json = if cache.is_none() {
+    let json = if cache.is_some() {
+        let json = cache.unwrap();
+        json.clone()
+    } else {
         let url = format!("https://www.reddit.com/r/{subreddit}/.json?limit=100&t=day");
-        let json_response = http_client
-            .get(url)
-            .headers(headers)
-            .send()
-            .await
-            .expect("API Request Error")
-            .text()
-            .await
-            .expect("API Response Error");
+        let json_response = http_client.get(url).headers(headers).send().await;
+
+        if let Err(_) = json_response {
+            return Err(String::from("API Request Error"));
+        }
+        let json_response = json_response.unwrap().text().await;
+
+        if let Err(_) = json_response {
+            return Err(String::from("API Response Error"));
+        }
+        let json_response = json_response.unwrap();
         let json: serde_json::Value =
             serde_json::from_str(&json_response).expect("JSON Deserialization Error");
         memcache.add(subreddit.to_string(), json.clone());
         json
-    } else {
-        let json = cache.unwrap();
-        json.clone()
     };
     let mut max_fail_iterator = 0;
     let mut json_segment = json["data"]["children"][0]["data"].to_owned();
@@ -100,18 +105,18 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation, memcache: &mut
     return Ok(post);
 }
 
-pub async fn xkcd_handler() -> Post {
+pub async fn xkcd_handler() -> Result<Post, String> {
     let url = String::from("https://xkcd.com/info.0.json");
     let json_response = reqwest::get(&url).await.unwrap().text().await.unwrap();
     let json: serde_json::Value =
         serde_json::from_str(&json_response.as_str()).expect("JSON Deserialization Error");
-    Post {
+    Ok(Post {
         title: format!("{} - {}", json["safe_title"], json["num"]),
         body: json["alt"].to_string(),
         powered_by: String::from("xkcd.com"),
         image_link: Some(json["img"].to_string().replace("\"", "")),
         url: Some(format!("https://xkcd.com/{}/", json["num"])),
-    }
+    })
 }
 
 pub fn is_image_link(url: &str) -> bool {
