@@ -1,9 +1,14 @@
 use rand::{self, Rng};
 use reqwest::header;
 
-use crate::{memcache::Memcache, scheduler_data::ScheduledAutomation};
+use crate::{
+    memcache::Memcache,
+    monitor::{Environment, RedditEnv},
+    scheduler_data::ScheduledAutomation,
+};
 
 const _MAX_CHECK_FAILURES: i32 = 150; // maximum amount of failures to allow while looping (prevents infinite loop)
+const _NUMBER_OF_POSTS: usize = 100; // number of posts to request for Reddit handler
 
 pub struct Post {
     pub title: String,
@@ -33,7 +38,10 @@ pub async fn reddit_handler(
         let json = cache.unwrap();
         json.clone()
     } else {
-        let url = format!("https://www.reddit.com/r/{subreddit}/.json?limit=100&t=day");
+        let url = format!(
+            "https://www.reddit.com/r/{subreddit}/.json?limit={}&t=day",
+            _NUMBER_OF_POSTS
+        );
         let json_response = http_client.get(url).headers(headers).send().await;
 
         if let Err(_) = json_response {
@@ -60,7 +68,7 @@ pub async fn reddit_handler(
     if automation.has_image {
         let mut image_present = false;
         while (!image_present || duplicate_id) && max_fail_iterator < _MAX_CHECK_FAILURES {
-            let randint = rng.gen_range(0..=100);
+            let randint: usize = rng.gen_range(0..=_NUMBER_OF_POSTS);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             image_present = is_image_link(&json_segment["url_overridden_by_dest"].to_string());
             duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
@@ -74,7 +82,7 @@ pub async fn reddit_handler(
     } else {
         image_link = None;
         while duplicate_id && max_fail_iterator < _MAX_CHECK_FAILURES {
-            let randint = rng.gen_range(0..=100);
+            let randint: usize = rng.gen_range(0..=_NUMBER_OF_POSTS);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
             if json["data"]["children"][randint]["data"]["subreddit"].to_string() == "null" {
@@ -101,6 +109,15 @@ pub async fn reddit_handler(
         )),
         image_link,
     };
+    let env = RedditEnv::new(
+        json_segment.clone(),
+        automation.db_name.clone(),
+        automation.get_ids(),
+    );
+    if !env.check() {
+        println!("Check failure occured, printing environment...");
+        env.print();
+    }
     automation.increment();
     automation.add_id(json_segment["id"].to_string());
     return Ok(post);

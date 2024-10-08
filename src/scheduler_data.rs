@@ -102,6 +102,10 @@ impl ScheduledAutomation {
         array.push(id.into());
     }
 
+    pub fn get_ids(&mut self) -> &Vec<serde_json::Value> {
+        self.lastids.as_array().unwrap()
+    }
+
     pub fn is_post_duplicate(&self, id: String) -> bool {
         let json_id = serde_json::Value::from(id);
         return self.lastids.as_array().unwrap().contains(&json_id);
