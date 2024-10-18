@@ -97,7 +97,7 @@ impl ScheduledAutomation {
     pub fn add_id(&mut self, id: String) {
         let array = self.lastids.as_array_mut().unwrap();
         while array.len() >= _DUPLICATE_MAX_ARRAY_SIZE.try_into().unwrap() {
-            array.remove(0);
+            array.remove(0); // might be non-performant, but this is a really small list
         }
         array.push(id.into());
     }
@@ -107,7 +107,11 @@ impl ScheduledAutomation {
     }
 
     pub fn is_post_duplicate(&self, id: String) -> bool {
-        let json_id = serde_json::Value::from(id);
-        return self.lastids.as_array().unwrap().contains(&json_id);
+        self.lastids
+            .as_array()
+            .unwrap()
+            .into_iter()
+            .find(|x| x.to_string() == id)
+            .is_some()
     }
 }

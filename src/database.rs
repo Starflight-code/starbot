@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use rusqlite::Connection;
 use crate::{
     scheduler_data::{AutomationType, ScheduledAutomation},
     Error,
 };
+use rusqlite::Connection;
 use serde_json::Value;
 
 pub struct Guild {
@@ -32,12 +32,14 @@ pub async fn create_connection() -> Connection {
     return connection;
 }
 
+// I'll probably migrate this to diesel-rs eventually (this works fine for now)
+
 pub fn initialize_database(conn: &Connection) {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS guilds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 guild_id ULONG NOT NULL UNIQUE,
-                automations TEXT, 
+                automations TEXT,
                 metadata TEXT
                 )",
         (),
