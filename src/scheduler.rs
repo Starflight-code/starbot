@@ -1,7 +1,6 @@
 use crate::api;
 use crate::database;
 use crate::discord;
-use crate::memcache::Memcache;
 use crate::scheduler_data::{AutomationType, ScheduledAutomation};
 
 use chrono::DateTime;
@@ -88,7 +87,7 @@ mod tests {
     is not available in `memcache` and sends messages to channels linked with automation instances with the
     authenticated `client` object.
 */
-pub async fn scheduler(client: serenity::Client, memcache: &mut Memcache) {
+pub async fn scheduler(client: serenity::Client) {
     let connection = database::create_connection().await;
     let mut no_automations = false;
     loop {
@@ -117,7 +116,7 @@ pub async fn scheduler(client: serenity::Client, memcache: &mut Memcache) {
         for i in next_up.0 {
             match automations[i].handler {
                 AutomationType::Reddit => {
-                    let response = api::reddit_handler(&mut automations[i], memcache).await;
+                    let response = api::reddit_handler(&mut automations[i]).await;
                     if let Ok(valid_post) = response {
                         discord::send_embed(
                             &client.http,
@@ -152,7 +151,7 @@ pub async fn run_automation(cache: &Http, automation: &mut ScheduledAutomation) 
     let connection = database::create_connection().await;
     match automation.handler {
         AutomationType::Reddit => {
-            let response = api::reddit_handler(automation, &mut Memcache::new()).await;
+            let response = api::reddit_handler(automation).await;
             if let Ok(valid_post) = response {
                 discord::send_embed(cache, valid_post, &ChannelId::new(automation.channelid)).await;
             }

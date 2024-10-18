@@ -2,9 +2,9 @@ use rand::{self, Rng};
 use reqwest::header;
 
 use crate::{
-    memcache::Memcache,
     monitor::{ConsoleLog, Environment, RedditEnv},
     scheduler_data::ScheduledAutomation,
+    GLOBAL_MEMCACHE,
 };
 
 const _MAX_CHECK_FAILURES: i32 = 150; // maximum amount of failures to allow while looping (prevents infinite loop)
@@ -18,10 +18,7 @@ pub struct Post {
     pub image_link: Option<String>,
 }
 
-pub async fn reddit_handler(
-    automation: &mut ScheduledAutomation,
-    memcache: &mut Memcache,
-) -> Result<Post, String> {
+pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post, String> {
     let http_client = reqwest::Client::new();
     let subreddit = automation.db_name.as_str();
 
@@ -33,7 +30,8 @@ pub async fn reddit_handler(
             .unwrap(),
     );
     headers.append(reqwest::header::USER_AGENT, "Mozilla/5.0".parse().unwrap());
-    let cache = memcache.get(subreddit.to_string());
+    let mut memcache_inner = GLOBAL_MEMCACHE.lock().await;
+    let cache = memcache_inner.get(subreddit.to_string());
     let json = if cache.is_some() {
         let json = cache.unwrap();
         json.clone()
@@ -55,7 +53,7 @@ pub async fn reddit_handler(
         let json_response = json_response.unwrap();
         let json: serde_json::Value =
             serde_json::from_str(&json_response).expect("JSON Deserialization Error");
-        memcache.add(subreddit.to_string(), json.clone());
+        memcache_inner.add(subreddit.to_string(), json.clone());
         json
     };
     let mut max_fail_iterator = 0;

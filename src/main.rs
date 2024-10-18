@@ -11,6 +11,7 @@ use std::env;
 use std::process::exit;
 
 use chrono::{TimeDelta, Utc};
+use lazy_static::lazy_static;
 use memcache::Memcache;
 use poise::{serenity_prelude as serenity, CreateReply};
 use scheduler::run_automation;
@@ -18,7 +19,12 @@ use scheduler_data::AutomationType;
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
+
 struct Handler {}
+
+lazy_static! {
+    static ref GLOBAL_MEMCACHE: Mutex<Memcache> = Mutex::new(Memcache::new());
+}
 
 struct Data {} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -178,7 +184,7 @@ async fn main() {
         })
         .build();
 
-    let mut client = Client::builder(&token, intents)
+    let mut client: Client = Client::builder(&token, intents)
         .event_handler(Handler {})
         .framework(framework)
         .await
@@ -187,9 +193,9 @@ async fn main() {
     let scheduler_client = Client::builder(&token, intents)
         .await
         .expect("Err creating client");
+
     tokio::spawn(async {
-        let mut memcache = Memcache::new();
-        _ = scheduler::scheduler(scheduler_client, &mut memcache).await;
+        _ = scheduler::scheduler(scheduler_client).await;
         tokio::task::yield_now().await
     });
     if let Err(why) = client.start().await {

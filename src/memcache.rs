@@ -1,5 +1,6 @@
 use crate::settings::_CACHE_LIFESPAN_HOURS;
 use chrono::{DateTime, TimeDelta, Utc};
+use serenity::prelude::TypeMapKey;
 use std::collections::HashMap;
 
 struct CachedObject {
@@ -15,6 +16,10 @@ impl CachedObject {
 
 pub struct Memcache {
     cache: HashMap<String, CachedObject>,
+}
+
+impl TypeMapKey for Memcache {
+    type Value = Memcache;
 }
 
 impl Memcache {
