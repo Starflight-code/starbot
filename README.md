@@ -1,5 +1,5 @@
 ## StarBot
-StarBot is a Discord bot that does one thing well. It quickly and efficiently scrapes Reddit and XKCD.com for webcomics, memes, cat photos, and even cute anime girls.
+StarBot is a Discord bot that does one thing well. It quickly and efficiently scrapes Reddit and XKCD.com for webcomics, memes, cat photos, anime girls, and anything in between, at defined intervals.
 
 #### How do I host StarBot?
 
@@ -10,9 +10,9 @@ cargo build -r
 ./starbot <your-bot-token-here>
 ```
 
-It's really that simple to launch it.
+It's really that simple to compile and launch the server.
 
-#### How do I get StarBot set up in my server?
+#### How do I get StarBot set up in my Discord server?
 
 It couldn't be easier, StarBot provides a bunch of slash commands to get you started. First through, you'll have to initialize it.
 
