@@ -35,8 +35,8 @@ Now, we have to schedule it in the channel we're current in.
 /add_schedule cats * * * 0/8 0 Cat Automation
 ```
 
-This runs our cats automation 3 times per day, with a display name of Cat Automation. The title of our embeds will be Cat Automation #(Iterator).
+This runs our cats automation 3 times per day, with a display name of Cat Automation. The title of our embeds will be "Cat Automation #{iterator-here}".
 
 You're finished and StarBot is set up.
 
-Feel free to open an issue if you find something that doesn't work correctly or open pull requests if you'd like to contribute.
+Feel free to open an issue if you find something that doesn't work correctly or open pull a request if you'd like to contribute.
