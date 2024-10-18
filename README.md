@@ -3,7 +3,7 @@ StarBot is a Discord bot that does one thing well. It quickly and efficiently sc
 
 #### How do I host StarBot?
 
-Get the rust toolchain installed, I'll be using cargo as a build tool.
+Get the Rust toolchain installed, I'll be using cargo as a build tool. For information on how to set this up, see [the book](https://doc.rust-lang.org/stable/book/ch01-01-installation.html).
 
 ```
 cargo build -r
