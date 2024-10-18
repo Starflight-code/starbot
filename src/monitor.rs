@@ -1,10 +1,10 @@
 pub trait Environment {
     fn check(&self) -> bool;
-    fn print(&self);
+    fn print(&self, to_print: &impl ValidationProcessor);
 }
 
 pub trait ValidationProcessor {
-    fn log(log_level: LogLevel, data: String);
+    fn log(&self, log_level: LogLevel, data: String);
 }
 
 pub enum LogLevel {
@@ -26,7 +26,7 @@ impl From<LogLevel> for String {
 pub struct ConsoleLog {}
 
 impl ValidationProcessor for ConsoleLog {
-    fn log(level: LogLevel, data: String) {
+    fn log(&self, level: LogLevel, data: String) {
         println!("{}: {}", String::from(level), data)
     }
 }
@@ -56,13 +56,19 @@ impl RedditEnv {
 }
 
 impl Environment for RedditEnv {
-    fn print(&self) {
-        println!(
+    fn print(&self, print_to: &impl ValidationProcessor) {
+        let mut to_send: String = format!(
             "Execution Environment for Reddit Automation: {}",
             self.automation
         );
-        println!("History: {}", self.history_state);
-        dbg!(&self.selected_json);
+        to_send.push_str(
+            format!(
+                "\nHistory: {} \n{:#}",
+                self.history_state, &self.selected_json
+            )
+            .as_str(),
+        );
+        print_to.log(LogLevel::Warning, to_send);
     }
     fn check(&self) -> bool {
         let history: Vec<&str> = self.history_state.split(",").collect();

@@ -3,7 +3,7 @@ use reqwest::header;
 
 use crate::{
     memcache::Memcache,
-    monitor::{Environment, RedditEnv},
+    monitor::{ConsoleLog, Environment, RedditEnv},
     scheduler_data::ScheduledAutomation,
 };
 
@@ -116,7 +116,8 @@ pub async fn reddit_handler(
     );
     if !env.check() {
         println!("Check failure occured, printing environment...");
-        env.print();
+        let log_method: ConsoleLog = ConsoleLog {};
+        env.print(&log_method);
     }
     automation.increment();
     automation.add_id(json_segment["id"].to_string());
