@@ -11,6 +11,8 @@ use std::env;
 use std::process::exit;
 
 use chrono::{TimeDelta, Utc};
+use diesel::prelude::*;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use lazy_static::lazy_static;
 use memcache::Memcache;
 use poise::{serenity_prelude as serenity, CreateReply};
@@ -20,6 +22,7 @@ use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/");
 struct Handler {}
 
 lazy_static! {
@@ -161,6 +164,14 @@ async fn add_schedule(
 
 #[tokio::main]
 async fn main() {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut connection = SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+
+    connection
+        .run_pending_migrations(MIGRATIONS)
+        .expect("Error applying Diesel-rs SQLite migrations");
+
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("A token should be passed in through command line arguments.\nEx: ./StarBot <Bot-Token>");
