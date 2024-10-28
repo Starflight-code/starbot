@@ -110,7 +110,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post
     let env = RedditEnv::new(
         json_segment.clone(),
         automation.db_name.clone(),
-        automation.get_ids(),
+        automation.get_ids().join(","),
     );
     if !env.check() {
         println!("Check failure occured, printing environment...");

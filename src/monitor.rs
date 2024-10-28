@@ -41,16 +41,12 @@ impl RedditEnv {
     pub fn new(
         selected_json: serde_json::Value,
         automation: String,
-        history_state: &Vec<serde_json::Value>,
+        history_state: String,
     ) -> RedditEnv {
-        let history: Vec<&str> = history_state
-            .into_iter()
-            .map(|x| x.as_str().unwrap())
-            .collect();
         RedditEnv {
             selected_json,
             automation,
-            history_state: history.join(","),
+            history_state: history_state,
         }
     }
 }

@@ -40,7 +40,7 @@ pub struct ScheduledAutomation {
     pub display_name: String,
     pub channelid: u64,
     pub iterator: u32,
-    pub lastids: serde_json::Value,
+    pub lastids: String,
     pub db_scheduled_id: u32,
     pub handler: AutomationType,
     pub has_image: bool,
@@ -65,7 +65,7 @@ impl ScheduledAutomation {
             display_name,
             channelid,
             iterator,
-            lastids: serde_json::from_str(&lastids).unwrap(),
+            lastids: lastids,
             db_scheduled_id,
             handler: AutomationType::from_db(handler).unwrap(),
             has_image,
@@ -95,23 +95,51 @@ impl ScheduledAutomation {
     }
 
     pub fn add_id(&mut self, id: String) {
-        let array = self.lastids.as_array_mut().unwrap();
+        let mut array: Vec<&str> = self.lastids.split(',').collect();
         while array.len() >= _DUPLICATE_MAX_ARRAY_SIZE.try_into().unwrap() {
             array.remove(0); // might be non-performant, but this is a really small list
         }
-        array.push(id.into());
+        array.push(&id);
+        self.lastids = array.join(",");
     }
 
-    pub fn get_ids(&mut self) -> &Vec<serde_json::Value> {
-        self.lastids.as_array().unwrap()
+    pub fn get_ids(&mut self) -> Vec<String> {
+        let ids: Vec<&str> = self.lastids.split(",").collect();
+        let mut return_ids: Vec<String> = Vec::new();
+        for id in ids {
+            return_ids.push(String::from(id));
+        }
+        return_ids
     }
 
     pub fn is_post_duplicate(&self, id: String) -> bool {
-        self.lastids
-            .as_array()
-            .unwrap()
-            .into_iter()
-            .find(|x| x.to_string() == id)
-            .is_some()
+        for last_id in self.lastids.split(",") {
+            if String::from(last_id) == id {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn last_ids_check() {
+        let scheduled = ScheduledAutomation {
+            cron_expresssion: String::from("0 0 * * *"),
+            cron: croner::Cron::new("0 0 * * *").parse().unwrap(),
+            db_name: String::from("TestDB"),
+            display_name: String::from("Test"),
+            channelid: 1,
+            iterator: 1,
+            lastids: String::from("1,2,3,4,5"),
+            db_scheduled_id: 1,
+            handler: AutomationType::XKCD,
+            has_image: false,
+        };
+        assert!(scheduled.is_post_duplicate(String::from("2")))
     }
 }
