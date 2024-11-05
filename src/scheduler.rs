@@ -1,9 +1,11 @@
 use crate::api;
 use crate::database;
 use crate::discord;
+use crate::models::Scheduled;
 use crate::scheduler_data::{AutomationType, ScheduledAutomation};
 
 use chrono::DateTime;
+use diesel::RunQueryDsl;
 use serenity::all::{ChannelId, Http};
 use std::collections::HashSet;
 use std::time::Duration;
@@ -88,10 +90,19 @@ mod tests {
     authenticated `client` object.
 */
 pub async fn scheduler(client: serenity::Client) {
-    let connection = database::create_connection().await;
+    use crate::schema::scheduled::dsl as scheduled_dsl;
+    //let connection = database::create_connection().await;
+    let mut connection = database::establish_connection().await;
     let mut no_automations = false;
     loop {
-        let mut automations = database::get_automations(&connection);
+        let db_automations: Vec<Scheduled> = scheduled_dsl::scheduled
+            .get_results(&mut connection)
+            .unwrap();
+        let mut automations = Vec::new();
+        for automation in db_automations {
+            automations.push(ScheduledAutomation::from_db(automation, &mut connection));
+        }
+        //let mut automations = database::get_automations(&connection);
         if automations.len() == 0 {
             if !no_automations {
                 println!("No automations exist, re-checking every minute...");
@@ -121,7 +132,7 @@ pub async fn scheduler(client: serenity::Client) {
                         discord::send_embed(
                             &client.http,
                             valid_post,
-                            &ChannelId::new(automations[i].channelid),
+                            &ChannelId::new(automations[i].channelid.try_into().unwrap()),
                         )
                         .await;
                     }
@@ -132,13 +143,13 @@ pub async fn scheduler(client: serenity::Client) {
                         discord::send_embed(
                             &client.http,
                             valid_post,
-                            &ChannelId::new(automations[i].channelid),
+                            &ChannelId::new(automations[i].channelid.try_into().unwrap()),
                         )
                         .await
                     }
                 }
             }
-            automations[i].update_db(&connection);
+            automations[i].update_db(&mut connection);
         }
     }
 }
@@ -148,20 +159,30 @@ pub async fn scheduler(client: serenity::Client) {
    the automation handler based off handler metadata within the `automation` object.
 */
 pub async fn run_automation(cache: &Http, automation: &mut ScheduledAutomation) {
-    let connection = database::create_connection().await;
+    let mut connection = database::establish_connection().await;
     match automation.handler {
         AutomationType::Reddit => {
             let response = api::reddit_handler(automation).await;
             if let Ok(valid_post) = response {
-                discord::send_embed(cache, valid_post, &ChannelId::new(automation.channelid)).await;
+                discord::send_embed(
+                    cache,
+                    valid_post,
+                    &ChannelId::new(automation.channelid.try_into().unwrap()),
+                )
+                .await;
             }
         }
         AutomationType::XKCD => {
             let response = api::xkcd_handler().await;
             if let Ok(valid_post) = response {
-                discord::send_embed(cache, valid_post, &ChannelId::new(automation.channelid)).await;
+                discord::send_embed(
+                    cache,
+                    valid_post,
+                    &ChannelId::new(automation.channelid.try_into().unwrap()),
+                )
+                .await;
             }
         }
     }
-    automation.update_db(&connection);
+    automation.update_db(&mut connection);
 }

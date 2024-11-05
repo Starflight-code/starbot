@@ -1,7 +1,7 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    automations (id) {
+    automation (id) {
         id -> Integer,
         name -> Text,
         handler -> Integer,
@@ -11,7 +11,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    guilds (id) {
+    guild (id) {
         id -> Integer,
         guild_id -> BigInt,
         automations -> Text,
@@ -22,15 +22,18 @@ diesel::table! {
 diesel::table! {
     scheduled (id) {
         id -> Integer,
-        guild -> Integer,
         channel_id -> BigInt,
-        automation -> Integer,
         post_id_history -> Text,
         iterator -> Integer,
         cron -> Text,
         display_name -> Text,
         settings -> Text,
+        guild_id -> Integer,
+        automation_id -> Integer,
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(automations, guilds, scheduled,);
+diesel::joinable!(scheduled -> automation (automation_id));
+diesel::joinable!(scheduled -> guild (guild_id));
+
+diesel::allow_tables_to_appear_in_same_query!(automation, guild, scheduled,);

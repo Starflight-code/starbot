@@ -2,9 +2,11 @@ pub mod api;
 pub mod database;
 pub mod discord;
 pub mod memcache;
+mod models;
 pub mod monitor;
 mod scheduler;
 pub mod scheduler_data;
+mod schema;
 pub mod settings;
 
 use std::env;
@@ -15,9 +17,10 @@ use diesel::prelude::*;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use lazy_static::lazy_static;
 use memcache::Memcache;
+use models::{Automation, Guild, NewAutomation, NewGuild, NewScheduled, Scheduled};
 use poise::{serenity_prelude as serenity, CreateReply};
 use scheduler::run_automation;
-use scheduler_data::AutomationType;
+use scheduler_data::{AutomationType, ScheduledAutomation};
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
@@ -47,8 +50,20 @@ impl EventHandler for Handler {
                 println!("Error sending message: {why:?}");
             }
         } else if msg.content == "!setup" {
-            let connection = database::create_connection().await;
-            database::add_guild(&connection, &msg.guild_id.unwrap().get());
+            use crate::schema::guild::dsl as guild_dsl;
+            let mut connection = database::establish_connection().await;
+
+            let guild = NewGuild {
+                guild_id: msg.guild_id.unwrap().get().try_into().unwrap(),
+                automations: "[]",
+                metadata: "[]",
+            };
+
+            diesel::insert_into(guild_dsl::guild)
+                .values(guild)
+                .execute(&mut connection)
+                .unwrap();
+
             if let Err(why) = msg.channel_id.say(&ctx.http, "Guild is now set up.").await {
                 println!("Error sending message: {why:?}");
             }
@@ -59,22 +74,39 @@ impl EventHandler for Handler {
 #[poise::command(slash_command, required_permissions = "ADMINISTRATOR")]
 async fn execute_task(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer_ephemeral().await?;
-    let connection = database::create_connection().await;
-    if !database::does_guild_exist(
-        &connection,
-        &ctx.guild_id()
-            .expect("Can only be executed in a guild")
-            .get(),
-    ) {
+
+    use crate::schema::guild::dsl as guild_dsl;
+    use crate::schema::scheduled::dsl as scheduled_dsl;
+    let mut connection = database::establish_connection().await;
+
+    //let connection = database::create_connection().await;
+    let guildid: i64 = ctx
+        .guild_id()
+        .expect("Can only be executed in a guild")
+        .get()
+        .try_into()
+        .unwrap();
+
+    if (guild_dsl::guild
+        .filter(guild_dsl::guild_id.eq(guildid))
+        .first(&mut connection) as Result<Guild, _>)
+        .is_err()
+    {
         return Err("Initialize this guild first with !setup".into());
     }
-    let automation = database::get_automation(&connection, &ctx.channel_id().get());
+    let channelid: i64 = ctx.channel_id().get().try_into().unwrap();
+    let db_automation: Option<Scheduled> = scheduled_dsl::scheduled
+        .filter(scheduled_dsl::channel_id.eq(channelid))
+        .first(&mut connection)
+        .optional()
+        .unwrap();
     let name;
-    match automation {
-        Some(_) => {
-            let mut automation = automation.unwrap();
-            name = automation.db_name.clone();
-            run_automation(&ctx.serenity_context().http, &mut automation).await
+
+    match db_automation {
+        Some(automation) => {
+            let mut scheduled = ScheduledAutomation::from_db(automation, &mut connection);
+            name = scheduled.db_name.clone();
+            run_automation(&ctx.serenity_context().http, &mut scheduled).await
         }
         None => return Err("That automation does not exist".into()),
     }
@@ -93,16 +125,39 @@ async fn create_automation(
     #[description = "Automation Handler"] handler: AutomationType,
     #[description = "Has Image"] has_image: bool,
 ) -> Result<(), Error> {
-    let connection = database::create_connection().await;
-    if !database::does_guild_exist(
-        &connection,
-        &ctx.guild_id()
-            .expect("Can only be executed in a guild")
-            .get(),
-    ) {
+    use crate::schema::automation::dsl as auto_dsl;
+    use crate::schema::guild::dsl as guild_dsl;
+    let mut connection = database::establish_connection().await;
+
+    let guildid: i64 = ctx
+        .guild_id()
+        .expect("Can only be executed in a guild")
+        .get()
+        .try_into()
+        .unwrap();
+
+    if (guild_dsl::guild
+        .filter(guild_dsl::guild_id.eq(guildid))
+        .first(&mut connection) as Result<Guild, _>)
+        .is_err()
+    {
         return Err("Initialize this guild first with !setup".into());
     }
-    database::add_automation(&connection, &automation, handler, &has_image);
+
+    let automation = automation.to_lowercase();
+
+    let auto = NewAutomation {
+        name: &automation,
+        handler: handler.value(),
+        metadata: "[]",
+        has_image,
+    };
+
+    diesel::insert_into(auto_dsl::automation)
+        .values(auto)
+        .execute(&mut connection)
+        .unwrap();
+
     ctx.send(
         CreateReply::default()
             .content(format!("Automation {} created!", automation))
@@ -119,15 +174,27 @@ async fn add_schedule(
     #[description = "Cron Expression"] cron: String,
     #[description = "Display Name"] name: String,
 ) -> Result<(), Error> {
-    let connection = database::create_connection().await;
-    if !database::does_guild_exist(
-        &connection,
-        &ctx.guild_id()
-            .expect("Can only be executed in a guild")
-            .get(),
-    ) {
+    use crate::schema::automation::dsl as auto_dsl;
+    use crate::schema::guild::dsl as guild_dsl;
+    use crate::schema::scheduled::dsl as scheduled_dsl;
+    let mut connection = database::establish_connection().await;
+
+    let guildid: i64 = ctx
+        .guild_id()
+        .expect("Can only be executed in a guild")
+        .get()
+        .try_into()
+        .unwrap();
+
+    let guild: Result<Guild, diesel::result::Error> = guild_dsl::guild
+        .filter(guild_dsl::guild_id.eq(guildid))
+        .first(&mut connection);
+
+    if guild.is_err() {
         return Err("Initialize this guild first with !setup".into());
     }
+    let guild = guild.unwrap();
+
     let is_cron_valid = croner::Cron::new(&cron).parse();
     if is_cron_valid.is_err() {
         return Err("The Cron expression you gave is invalid.".into());
@@ -139,17 +206,27 @@ async fn add_schedule(
     }
     automation = automation.to_lowercase();
 
-    let result = database::add_scheduled(
-        &connection,
-        &ctx.guild_id().unwrap().get(),
-        &ctx.channel_id().get(),
-        &automation,
-        &cron,
-        &name,
-    );
-    if result.is_err() {
-        return result;
-    }
+    let auto: Automation = auto_dsl::automation
+        .filter(auto_dsl::name.eq(&automation))
+        .first(&mut connection)
+        .unwrap();
+
+    let schedule = NewScheduled {
+        channel_id: ctx.channel_id().get().try_into().unwrap(),
+        automation_id: auto.id,
+        post_id_history: "[]",
+        iterator: 1,
+        cron: &cron,
+        display_name: &name,
+        settings: "[]",
+        guild_id: guild.id,
+    };
+
+    diesel::insert_into(scheduled_dsl::scheduled)
+        .values(schedule)
+        .execute(&mut connection)
+        .unwrap();
+
     ctx.send(
         CreateReply::default()
             .content(format!(
@@ -164,7 +241,8 @@ async fn add_schedule(
 
 #[tokio::main]
 async fn main() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    //let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = "./data-new.db";
     let mut connection = SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
 

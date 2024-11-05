@@ -1,11 +1,4 @@
-use std::path::Path;
-
-use crate::{
-    scheduler_data::{AutomationType, ScheduledAutomation},
-    Error,
-};
-use rusqlite::Connection;
-use serde_json::Value;
+use diesel::{Connection, SqliteConnection};
 
 pub struct Guild {
     pub guild_id: u64,
@@ -20,7 +13,7 @@ pub struct Automation {
     pub scheduled_id: u32,
 }
 
-pub async fn create_connection() -> Connection {
+/*pub async fn create_connection() -> Connection {
     let mut requires_initialization = false;
     if !Path::new("data.db").exists() {
         requires_initialization = true;
@@ -30,10 +23,16 @@ pub async fn create_connection() -> Connection {
         initialize_database(&connection);
     }
     return connection;
+}*/
+
+pub async fn establish_connection() -> SqliteConnection {
+    let database_url = "./data-new.db";
+    SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
 // I'll probably migrate this to diesel-rs eventually (this works fine for now)
-
+/*
 pub fn initialize_database(conn: &Connection) {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS guilds (
@@ -242,3 +241,4 @@ pub fn get_automation(conn: &Connection, channel_id: &u64) -> Option<ScheduledAu
     }
     return Some(rows.unwrap());
 }
+*/
