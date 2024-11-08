@@ -1,7 +1,8 @@
 use chrono::{DateTime, Local};
-use rusqlite::Connection;
+use diesel::{ExpressionMethods, SqliteConnection};
+use diesel::{QueryDsl, RunQueryDsl};
 
-use crate::database::{self, Automation};
+use crate::models::{Automation, NewScheduled, Scheduled};
 use crate::settings::_DUPLICATE_MAX_ARRAY_SIZE;
 
 #[derive(Debug, poise::ChoiceParameter)]
@@ -11,14 +12,14 @@ pub enum AutomationType {
 }
 
 impl AutomationType {
-    pub fn value(self) -> u32 {
+    pub fn value(self) -> i32 {
         match self {
             AutomationType::Reddit => return 1,
             AutomationType::XKCD => return 2,
         }
     }
 
-    pub fn from_db(id: u32) -> Option<AutomationType> {
+    pub fn from_db(id: i32) -> Option<AutomationType> {
         match id {
             1 => {
                 return Some(AutomationType::Reddit);
@@ -38,10 +39,10 @@ pub struct ScheduledAutomation {
     pub cron: croner::Cron,
     pub db_name: String,
     pub display_name: String,
-    pub channelid: u64,
-    pub iterator: u32,
-    pub lastids: serde_json::Value,
-    pub db_scheduled_id: u32,
+    pub channelid: i64,
+    pub iterator: i32,
+    pub lastids: String,
+    pub db_scheduled_id: i32,
     pub handler: AutomationType,
     pub has_image: bool,
 }
@@ -51,11 +52,11 @@ impl ScheduledAutomation {
         cron_expresssion: String,
         db_name: String,
         display_name: String,
-        channelid: u64,
-        iterator: u32,
+        channelid: i64,
+        iterator: i32,
         lastids: String,
-        db_scheduled_id: u32,
-        handler: u32,
+        db_scheduled_id: i32,
+        handler: i32,
         has_image: bool,
     ) -> ScheduledAutomation {
         return ScheduledAutomation {
@@ -65,7 +66,7 @@ impl ScheduledAutomation {
             display_name,
             channelid,
             iterator,
-            lastids: serde_json::from_str(&lastids).unwrap(),
+            lastids: lastids,
             db_scheduled_id,
             handler: AutomationType::from_db(handler).unwrap(),
             has_image,
@@ -78,16 +79,31 @@ impl ScheduledAutomation {
             .find_next_occurrence(&Local::now(), false)
             .unwrap();
     }
-    pub fn update_db(&self, conn: &Connection) {
-        let new_values = Automation {
-            channelid: self.channelid,
-            lastids: self.lastids.to_string(),
-            cron: self.cron_expresssion.clone(),
+
+    pub fn update_db(&self, db: &mut SqliteConnection) {
+        use crate::schema::scheduled::dsl as scheduled_dsl;
+
+        let current_object: Scheduled = scheduled_dsl::scheduled
+            .filter(scheduled_dsl::id.eq(self.db_scheduled_id))
+            .first(db)
+            .unwrap();
+
+        let to_update = NewScheduled {
+            channel_id: self.channelid,
+            automation_id: current_object.automation_id,
+            post_id_history: &self.lastids,
             iterator: self.iterator,
-            name: self.display_name.clone(),
-            scheduled_id: self.db_scheduled_id,
+            cron: &self.cron_expresssion,
+            display_name: &self.display_name,
+            settings: &current_object.settings,
+            guild_id: current_object.guild_id,
         };
-        database::update_scheduled(conn, &new_values)
+
+        diesel::update(scheduled_dsl::scheduled)
+            .filter(scheduled_dsl::id.eq(self.db_scheduled_id))
+            .set(to_update)
+            .execute(db)
+            .unwrap();
     }
 
     pub fn increment(&mut self) {
@@ -95,15 +111,73 @@ impl ScheduledAutomation {
     }
 
     pub fn add_id(&mut self, id: String) {
-        let array = self.lastids.as_array_mut().unwrap();
+        let mut array: Vec<&str> = self.lastids.split(',').collect();
         while array.len() >= _DUPLICATE_MAX_ARRAY_SIZE.try_into().unwrap() {
-            array.remove(0);
+            array.remove(0); // might be non-performant, but this is a really small list
         }
-        array.push(id.into());
+        array.push(&id);
+        self.lastids = array.join(",");
+    }
+
+    pub fn get_ids(&mut self) -> Vec<String> {
+        let ids: Vec<&str> = self.lastids.split(",").collect();
+        let mut return_ids: Vec<String> = Vec::new();
+        for id in ids {
+            return_ids.push(String::from(id));
+        }
+        return_ids
     }
 
     pub fn is_post_duplicate(&self, id: String) -> bool {
-        let json_id = serde_json::Value::from(id);
-        return self.lastids.as_array().unwrap().contains(&json_id);
+        for last_id in self.lastids.split(",") {
+            if String::from(last_id) == id {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    pub fn from_db(item: Scheduled, db: &mut SqliteConnection) -> Self {
+        use crate::schema::automation::dsl as automation_dsl;
+
+        let parent_automation: Automation = automation_dsl::automation
+            .filter(automation_dsl::id.eq(item.automation_id))
+            .first(db)
+            .unwrap();
+
+        ScheduledAutomation::new(
+            // eventually, ScheduledAutomation should merely wrap Scheduled and Automation for DB
+            item.cron,
+            parent_automation.name,
+            item.display_name,
+            item.channel_id,
+            item.iterator,
+            item.post_id_history,
+            item.id,
+            parent_automation.handler,
+            parent_automation.has_image,
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn last_ids_check() {
+        let scheduled = ScheduledAutomation {
+            cron_expresssion: String::from("0 0 * * *"),
+            cron: croner::Cron::new("0 0 * * *").parse().unwrap(),
+            db_name: String::from("TestDB"),
+            display_name: String::from("Test"),
+            channelid: 1,
+            iterator: 1,
+            lastids: String::from("1,2,3,4,5"),
+            db_scheduled_id: 1,
+            handler: AutomationType::XKCD,
+            has_image: false,
+        };
+        assert!(scheduled.is_post_duplicate(String::from("2")))
     }
 }
