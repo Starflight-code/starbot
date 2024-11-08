@@ -241,10 +241,7 @@ async fn add_schedule(
 
 #[tokio::main]
 async fn main() {
-    //let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let database_url = "./data-new.db";
-    let mut connection = SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+    let mut connection = database::establish_connection().await;
 
     connection
         .run_pending_migrations(MIGRATIONS)
