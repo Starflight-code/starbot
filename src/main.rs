@@ -276,12 +276,13 @@ async fn main() {
         .await
         .expect("Err creating client");
 
-    let scheduler_client = Client::builder(&token, intents)
-        .await
-        .expect("Err creating client");
+    let thread_token = token.clone();
 
     tokio::spawn(async {
-        _ = scheduler::scheduler(scheduler_client).await;
+        let thread_intents = GatewayIntents::GUILD_MESSAGES
+            | GatewayIntents::DIRECT_MESSAGES
+            | GatewayIntents::MESSAGE_CONTENT;
+        _ = scheduler::scheduler(thread_token, thread_intents).await;
         tokio::task::yield_now().await
     });
     if let Err(why) = client.start().await {
