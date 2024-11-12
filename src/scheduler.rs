@@ -6,9 +6,7 @@ use crate::scheduler_data::{AutomationType, ScheduledAutomation};
 
 use chrono::DateTime;
 use diesel::RunQueryDsl;
-use serenity::all::GatewayIntents;
 use serenity::all::{ChannelId, Http};
-use serenity::Client;
 use std::collections::HashSet;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -91,7 +89,7 @@ mod tests {
     is not available in `memcache` and sends messages to channels linked with automation instances with the
     authenticated `client` object.
 */
-pub async fn scheduler(token: String, intents: GatewayIntents) {
+pub async fn scheduler(client: serenity::Client) {
     use crate::schema::scheduled::dsl as scheduled_dsl;
     //let connection = database::create_connection().await;
     let mut connection = database::establish_connection().await;
@@ -126,38 +124,32 @@ pub async fn scheduler(token: String, intents: GatewayIntents) {
         );
 
         sleep(Duration::from_secs(time_to_wait)).await;
-
-        {
-            let client = Client::builder(&token, intents)
-                .await
-                .expect("Err creating client");
-            for i in next_up.0 {
-                match automations[i].handler {
-                    AutomationType::Reddit => {
-                        let response = api::reddit_handler(&mut automations[i]).await;
-                        if let Ok(valid_post) = response {
-                            discord::send_embed(
-                                &client.http,
-                                valid_post,
-                                &ChannelId::new(automations[i].channelid.try_into().unwrap()),
-                            )
-                            .await;
-                        }
-                    }
-                    AutomationType::XKCD => {
-                        let response = api::xkcd_handler().await;
-                        if let Ok(valid_post) = response {
-                            discord::send_embed(
-                                &client.http,
-                                valid_post,
-                                &ChannelId::new(automations[i].channelid.try_into().unwrap()),
-                            )
-                            .await
-                        }
+        for i in next_up.0 {
+            match automations[i].handler {
+                AutomationType::Reddit => {
+                    let response = api::reddit_handler(&mut automations[i]).await;
+                    if let Ok(valid_post) = response {
+                        discord::send_embed(
+                            &client.http,
+                            valid_post,
+                            &ChannelId::new(automations[i].channelid.try_into().unwrap()),
+                        )
+                        .await;
                     }
                 }
-                automations[i].update_db(&mut connection);
+                AutomationType::XKCD => {
+                    let response = api::xkcd_handler().await;
+                    if let Ok(valid_post) = response {
+                        discord::send_embed(
+                            &client.http,
+                            valid_post,
+                            &ChannelId::new(automations[i].channelid.try_into().unwrap()),
+                        )
+                        .await
+                    }
+                }
             }
+            automations[i].update_db(&mut connection);
         }
     }
 }
