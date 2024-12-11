@@ -13,16 +13,15 @@ diesel::table! {
 diesel::table! {
     guild (id) {
         id -> Integer,
-        guild_id -> BigInt,
         automations -> Text,
         metadata -> Text,
+        guild_id -> Text,
     }
 }
 
 diesel::table! {
     scheduled (id) {
         id -> Integer,
-        channel_id -> BigInt,
         post_id_history -> Text,
         iterator -> Integer,
         cron -> Text,
@@ -30,10 +29,15 @@ diesel::table! {
         settings -> Text,
         guild_id -> Integer,
         automation_id -> Integer,
+        channel_id -> Text,
     }
 }
 
 diesel::joinable!(scheduled -> automation (automation_id));
 diesel::joinable!(scheduled -> guild (guild_id));
 
-diesel::allow_tables_to_appear_in_same_query!(automation, guild, scheduled,);
+diesel::allow_tables_to_appear_in_same_query!(
+    automation,
+    guild,
+    scheduled,
+);
