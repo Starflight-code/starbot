@@ -22,3 +22,4 @@ rusqlite = { version = "0.32.1", features = ["bundled"] }
 poise = "0.6.1"
 lazy_static = "1.5.0"
 diesel_migrations = "2.2.0"
+dotenv = "0.15.0"

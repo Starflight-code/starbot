@@ -18,7 +18,37 @@ pub struct Post {
     pub image_link: Option<String>,
 }
 
+macro_rules! unwrap_or_retry {
+    ($e:expr) => {
+        match $e {
+            Ok(x) => x,
+            Err(_) => {
+                failures += 1;
+                continue;
+            }
+        }
+    };
+}
+
+macro_rules! manage_failures {
+    ($b:block, $f:block, $n:literal) => {
+        #[allow(unused_mut)]
+        let mut failures = 0;
+        while failures < $n {
+            $b
+        }
+        $f
+    };
+}
+
 pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post, String> {
+    manage_failures!(
+        {
+            let item = 0;
+        },
+        { return Err(String::from("Failed 3 times, could not complete request.")) },
+        3
+    );
     let http_client = reqwest::Client::new();
     let subreddit = automation.db_name.as_str();
 
