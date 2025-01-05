@@ -354,6 +354,7 @@ async fn main() {
         .expect("Error applying Diesel-rs SQLite migrations");
 
     let mut args: Vec<String> = env::args().collect();
+    args.push(String::from());
     if args.len() < 2 {
         println!("A token should be passed in through command line arguments.\nEx: ./StarBot <Bot-Token>");
         exit(1);

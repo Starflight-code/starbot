@@ -71,11 +71,11 @@ pub struct NewGuild<'a> {
 }
 /*
 Guild Ticket Types:
-guild_id (pk to Guild): int, ticket type display name: string, roles allowed (view/send): json (role ids), roles allowed (view): json, control roles: json (allows adding new roles to ticket or removing them), roles to mention: json (role ids)
+guild_id (pk to Guild): int, ticket type display name: string, roles allowed (view/send):  json (role ids),roles allowed (view): json, control roles: json (allows adding new roles to ticket or removing them), roles to mention: json (role ids)
 
 Ticket object:
 guild_id (pk to Guild), channelid: string, tickettype: (pk to ticket type), initiator: (userid) string, overrides: json [action: (added/removed), (user or role), (user/role id)], claimed by: userid
 
 Message:
-for ticket: (pk of ticket), sent by: userid, anonymous: bool, content: string
+for ticket: (pk of ticket), sent by: userid, date sent: datetime/int since unix epoch, anonymous: bool, content: string
 */
