@@ -17,8 +17,10 @@ pub async fn send_embed(cache: &Http, post: Post, channel: &ChannelId) {
         embed = embed.clone().url(post.url.unwrap());
     }
 
-    channel
+    let send = channel
         .send_message(cache, CreateMessage::new().embed(embed))
-        .await
-        .unwrap();
+        .await;
+    if send.is_err() {
+        println!("Channel send failed on automation: {}", post.powered_by);
+    }
 }

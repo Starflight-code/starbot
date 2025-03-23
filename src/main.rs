@@ -11,7 +11,12 @@ pub mod settings;
 
 use std::env;
 use std::process::exit;
+use std::time::Duration;
 
+use ::serenity::all::{
+    ComponentInteractionDataKind, CreateEmbed, CreateMessage, CreateSelectMenu,
+    CreateSelectMenuKind, CreateSelectMenuOption, GuildId,
+};
 use chrono::{TimeDelta, Utc};
 use diesel::prelude::*;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -21,6 +26,7 @@ use models::{Automation, Guild, NewAutomation, NewGuild, NewScheduled, Scheduled
 use poise::{serenity_prelude as serenity, CreateReply};
 use scheduler::run_automation;
 use scheduler_data::{AutomationType, ScheduledAutomation};
+use serde_json::json;
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
@@ -39,9 +45,115 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: serenity::prelude::Context, msg: Message) {
+        if msg.author.bot {
+            return;
+        }
+
+        use crate::schema::guild::dsl as guild_dsl;
+        let mut connection = database::establish_connection().await;
+
         let channel = msg.channel(&ctx.http).await.unwrap();
         if channel.private().is_some() {
-            // Do something
+            let mut guilds = Vec::new();
+            for guild in ctx.cache.guilds().iter() {
+                if guild.member(&ctx.http, msg.author.id).await.is_ok() {
+                    guilds.push(*guild);
+                }
+            }
+            //msg.reply(&ctx.http, "You're accessing some functionality that isn't quite ready yet. It's currently disabled, please try again later!").await.unwrap();
+            //return;
+
+            let mut guild_menus = Vec::new();
+            let mut guild_info = Vec::new();
+            let mut iter = 0;
+            for guild in guilds {
+                iter += 1;
+                let mut name = ctx.http.get_guild(guild).await.unwrap().name;
+                guild_info.push((
+                    format!("{}: {}", iter, name),
+                    String::from("Create a new ticket."),
+                    true,
+                ));
+                if name.len() > 24 {
+                    name.truncate(22);
+                    name.push_str("..");
+                }
+                guild_menus.push(CreateSelectMenuOption::new(name, format!("{}", guild)));
+            }
+
+            let m = msg
+                .channel_id
+                .send_message(
+                    &ctx,
+                    CreateMessage::new()
+                        .embed(CreateEmbed::new().title("Your Guilds").fields(guild_info))
+                        .content("Please select your favorite animal")
+                        .select_menu(
+                            CreateSelectMenu::new(
+                                "guild_select",
+                                CreateSelectMenuKind::String {
+                                    options: guild_menus,
+                                },
+                            )
+                            .custom_id("guild_select")
+                            .placeholder("No animal selected"),
+                        ),
+                )
+                .await
+                .unwrap();
+
+            let interaction = match m
+                .await_component_interaction(&ctx.shard)
+                .timeout(Duration::from_secs(60 * 5))
+                .await
+            {
+                Some(x) => x,
+                None => {
+                    m.delete(&ctx).await.unwrap_or_default();
+                    m.reply(
+                        &ctx,
+                        "Interaction Timed Out. This application will no longer respond to the menu provided above.",
+                    )
+                    .await
+                    .unwrap();
+                    return;
+                }
+            };
+
+            let guildid = match &interaction.data.kind {
+                ComponentInteractionDataKind::StringSelect { values } => &values[0],
+                _ => panic!("unexpected interaction data kind"),
+            };
+
+            let guild: Result<Guild, _> = guild_dsl::guild
+                .filter(guild_dsl::guild_id.eq(guildid))
+                .first(&mut connection);
+
+            if guild.is_err() {
+                msg.reply(&ctx.http, "An internal error has occured: GUILD_DOES_NOT_EXIST. Please contact my developer.").await.unwrap();
+            }
+
+            let guild = guild.unwrap();
+            ctx.http
+                .create_channel(
+                    GuildId::new(guild.guild_id.parse().unwrap()),
+                    &json!({
+                    "name": "Test Channel",
+                    "type": 0,
+                    "parent_id": 1307187771542343771 as u64,
+                    "permission_overwrites": [
+                        {
+                            "id": 233056950361915392 as u64,
+                            "type": 1, // member
+                            "allow": "68608", // allow see history, messages, send messages
+                            "deny": "0"
+                        }
+                    ]
+                    }),
+                    None,
+                )
+                .await
+                .unwrap();
             return;
         }
 
@@ -50,11 +162,8 @@ impl EventHandler for Handler {
                 println!("Error sending message: {why:?}");
             }
         } else if msg.content == "!setup" {
-            use crate::schema::guild::dsl as guild_dsl;
-            let mut connection = database::establish_connection().await;
-
             let guild = NewGuild {
-                guild_id: msg.guild_id.unwrap().get().try_into().unwrap(),
+                guild_id: &msg.guild_id.unwrap().get().to_string(),
                 automations: "[]",
                 metadata: "[]",
             };
@@ -80,12 +189,11 @@ async fn execute_task(ctx: Context<'_>) -> Result<(), Error> {
     let mut connection = database::establish_connection().await;
 
     //let connection = database::create_connection().await;
-    let guildid: i64 = ctx
+    let guildid = ctx
         .guild_id()
         .expect("Can only be executed in a guild")
         .get()
-        .try_into()
-        .unwrap();
+        .to_string();
 
     if (guild_dsl::guild
         .filter(guild_dsl::guild_id.eq(guildid))
@@ -94,7 +202,7 @@ async fn execute_task(ctx: Context<'_>) -> Result<(), Error> {
     {
         return Err("Initialize this guild first with !setup".into());
     }
-    let channelid: i64 = ctx.channel_id().get().try_into().unwrap();
+    let channelid = ctx.channel_id().get().to_string();
     let db_automation: Option<Scheduled> = scheduled_dsl::scheduled
         .filter(scheduled_dsl::channel_id.eq(channelid))
         .first(&mut connection)
@@ -129,12 +237,11 @@ async fn create_automation(
     use crate::schema::guild::dsl as guild_dsl;
     let mut connection = database::establish_connection().await;
 
-    let guildid: i64 = ctx
+    let guildid = ctx
         .guild_id()
         .expect("Can only be executed in a guild")
         .get()
-        .try_into()
-        .unwrap();
+        .to_string();
 
     if (guild_dsl::guild
         .filter(guild_dsl::guild_id.eq(guildid))
@@ -179,12 +286,11 @@ async fn add_schedule(
     use crate::schema::scheduled::dsl as scheduled_dsl;
     let mut connection = database::establish_connection().await;
 
-    let guildid: i64 = ctx
+    let guildid = ctx
         .guild_id()
         .expect("Can only be executed in a guild")
         .get()
-        .try_into()
-        .unwrap();
+        .to_string();
 
     let guild: Result<Guild, diesel::result::Error> = guild_dsl::guild
         .filter(guild_dsl::guild_id.eq(guildid))
@@ -212,7 +318,7 @@ async fn add_schedule(
         .unwrap();
 
     let schedule = NewScheduled {
-        channel_id: ctx.channel_id().get().try_into().unwrap(),
+        channel_id: &ctx.channel_id().get().to_string(),
         automation_id: auto.id,
         post_id_history: "[]",
         iterator: 1,

@@ -39,7 +39,7 @@ pub struct ScheduledAutomation {
     pub cron: croner::Cron,
     pub db_name: String,
     pub display_name: String,
-    pub channelid: i64,
+    pub channelid: u64,
     pub iterator: i32,
     pub lastids: String,
     pub db_scheduled_id: i32,
@@ -52,7 +52,7 @@ impl ScheduledAutomation {
         cron_expresssion: String,
         db_name: String,
         display_name: String,
-        channelid: i64,
+        channelid: u64,
         iterator: i32,
         lastids: String,
         db_scheduled_id: i32,
@@ -89,7 +89,7 @@ impl ScheduledAutomation {
             .unwrap();
 
         let to_update = NewScheduled {
-            channel_id: self.channelid,
+            channel_id: &self.channelid.to_string(),
             automation_id: current_object.automation_id,
             post_id_history: &self.lastids,
             iterator: self.iterator,
@@ -150,7 +150,7 @@ impl ScheduledAutomation {
             item.cron,
             parent_automation.name,
             item.display_name,
-            item.channel_id,
+            item.channel_id.parse().unwrap(),
             item.iterator,
             item.post_id_history,
             item.id,
