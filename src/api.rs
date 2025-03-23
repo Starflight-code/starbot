@@ -18,6 +18,7 @@ pub struct Post {
     pub image_link: Option<String>,
 }
 
+#[allow(unused_macros)]
 macro_rules! unwrap_or_retry {
     ($e:expr) => {
         match $e {
@@ -30,6 +31,7 @@ macro_rules! unwrap_or_retry {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! manage_failures {
     ($b:block, $f:block, $n:literal) => {
         #[allow(unused_mut)]
@@ -42,13 +44,6 @@ macro_rules! manage_failures {
 }
 
 pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post, String> {
-    manage_failures!(
-        {
-            let item = 0;
-        },
-        { return Err(String::from("Failed 3 times, could not complete request.")) },
-        3
-    );
     let http_client = reqwest::Client::new();
     let subreddit = automation.db_name.as_str();
 
@@ -91,12 +86,12 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post
     let image_link: Option<String>;
 
     let mut duplicate_id = true; // initial to true, makes !automation.has_image loop run
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     if automation.has_image {
         let mut image_present = false;
         while (!image_present || duplicate_id) && max_fail_iterator < _MAX_CHECK_FAILURES {
-            let randint: usize = rng.gen_range(0..=_NUMBER_OF_POSTS);
+            let randint: usize = rng.random_range(0..=_NUMBER_OF_POSTS);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             image_present = is_image_link(&json_segment["url_overridden_by_dest"].to_string());
             duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
@@ -110,7 +105,7 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post
     } else {
         image_link = None;
         while duplicate_id && max_fail_iterator < _MAX_CHECK_FAILURES {
-            let randint: usize = rng.gen_range(0..=_NUMBER_OF_POSTS);
+            let randint: usize = rng.random_range(0..=_NUMBER_OF_POSTS);
             json_segment = json["data"]["children"][randint]["data"].to_owned();
             duplicate_id = automation.is_post_duplicate(json_segment["id"].to_string());
             if json["data"]["children"][randint]["data"]["subreddit"].to_string() == "null" {
@@ -154,7 +149,17 @@ pub async fn reddit_handler(automation: &mut ScheduledAutomation) -> Result<Post
 
 pub async fn xkcd_handler() -> Result<Post, String> {
     let url = String::from("https://xkcd.com/info.0.json");
-    let json_response = reqwest::get(&url).await.unwrap().text().await.unwrap();
+    let json_response = reqwest::get(&url).await;
+    if let Err(_) = json_response {
+        return Err(String::from("Failed to unwrap initial request."));
+    }
+
+    let json_response = json_response.unwrap().text().await;
+    if let Err(_) = json_response {
+        return Err(String::from("Failed to parse request response text."));
+    }
+
+    let json_response = json_response.unwrap();
     let json: serde_json::Value =
         serde_json::from_str(&json_response.as_str()).expect("JSON Deserialization Error");
     Ok(Post {
