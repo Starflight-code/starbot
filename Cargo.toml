@@ -1,11 +1,11 @@
 [package]
 name = "starbot"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 
 [profile.release]
 strip = true # Automatically strip symbols from the binary.
-#lto = true   # Enable link time optimizations
+lto = true   # Enable link time optimizations
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
